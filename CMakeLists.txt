@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ecn_sensorbased)
 
+add_compile_options(-std=c++11)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -8,10 +10,13 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   roscpp
   vrep_common
+  sensor_msgs
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(OpenCV REQUIRED)
+find_package(VISP REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
@@ -23,10 +28,10 @@ find_package(OpenCV REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include ${OpenCV_INCLUDE_DIRS}
-#  LIBRARIES ecn_sensorbased
-  CATKIN_DEPENDS cv_bridge roscpp vrep_common
-  DEPENDS ${OpenCV_LIBRARIES}
+  INCLUDE_DIRS include ${OpenCV_INCLUDE_DIRS}  ${VISP_INCLUDE_DIRS}
+  LIBRARIES pioneer
+  CATKIN_DEPENDS cv_bridge roscpp vrep_common sensor_msgs geometry_msgs
+  DEPENDS ${OpenCV_LIBRARIES}  ${VISP_LIBRARIES}
 )
 
 ###########
@@ -37,8 +42,11 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${VISP_INCLUDE_DIRS}
 )
 
-
+add_executable(pioneer src/main.cpp include/ecn_sensorbased/pioneer_cam.h src/pioneer_cam.cpp)
+target_link_libraries(pioneer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${VISP_LIBRARIES})
