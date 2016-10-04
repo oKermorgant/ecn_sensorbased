@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   vrep_common
   sensor_msgs
   geometry_msgs
+  image_transport
 )
 
 ## System dependencies are found with CMake's conventions
@@ -30,7 +31,7 @@ find_package(VISP REQUIRED)
 catkin_package(
   INCLUDE_DIRS include ${OpenCV_INCLUDE_DIRS}  ${VISP_INCLUDE_DIRS}
   LIBRARIES pioneer
-  CATKIN_DEPENDS cv_bridge roscpp vrep_common sensor_msgs geometry_msgs
+  CATKIN_DEPENDS cv_bridge roscpp vrep_common sensor_msgs geometry_msgs image_transport
   DEPENDS ${OpenCV_LIBRARIES}  ${VISP_LIBRARIES}
 )
 

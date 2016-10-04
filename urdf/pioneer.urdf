@@ -1,0 +1,96 @@
+<robot name="scara">
+<material name="matbase">
+        <color rgba="1 1 1 1"/>
+      </material>
+ <material name="mat3">
+        <color rgba="1 1 1 1"/>
+      </material>
+ <material name="mat2">
+        <color rgba=".8 0 0 1"/>
+      </material>
+ <material name="mat1">
+        <color rgba=".0 0 0 1"/>
+      </material>
+ <material name="mat4">
+        <color rgba=".0 0 1 1"/>
+      </material>
+
+<!-- Links -->
+  <link name="base_link">
+    <visual>
+        <origin xyz="0 0 0." rpy="0 0 0" />
+      <geometry>
+        <box size=".5 .3 .2"/>
+      </geometry>
+ <material name="matbase"/>
+    </visual> 
+  </link>
+
+<link name="neck">
+<visual>
+<geometry>
+        <cylinder length=".06" radius="0.015"/>
+</geometry>
+ <material name="mat1"/>
+    </visual>
+</link>
+
+<link name="head">
+<visual>
+<geometry>
+        <sphere radius=".025"/>
+</geometry>
+ <material name="mat3"/>
+    </visual>
+</link>
+
+<link name="gna"/>
+
+<link name="camera">	 
+<visual>
+<geometry>
+        <box size="0.01 0.01 0.03"/>
+</geometry>
+ <material name="mat4"/>
+    </visual>
+</link>
+<!-- Joints -->
+
+	<joint name="camera_pan" type="revolute">
+    	<limit lower="-1.5707963267948" upper="1.5707963267948" effort="10" velocity="3" />
+	<dynamics damping="0.0" friction="0.0"/>
+    	<parent link="base_link" />
+    	<child link="neck"/>
+    	<origin xyz="0.2 0 0.125" rpy="0 0 0" />
+    	<axis xyz="0 0 1" />
+	</joint>
+
+	<joint name="camera_tilt" type="revolute">
+            <limit lower="-1.5707963267948" upper="1.5707963267948" effort="10" velocity="3" />
+    	<parent link="neck" />
+    	<child link="head" />
+    	<origin xyz="0.0 0 0.05" rpy="1.5707963267948 0 0" />
+        <axis xyz="0 0 1" />
+	</joint>
+
+	<joint name="camjoint" type="fixed">
+    	<parent link="head" />
+    	<child link="gna" />
+    	<origin xyz="0.035 0 0.0" rpy="0 1.5707963267948 0" />
+	</joint>
+        
+        <joint name="camjoint2" type="fixed">
+    	<parent link="gna" />
+    	<child link="camera" />
+    	<origin xyz="0.0 0 0.0" rpy="0 0 3.141592653589793" />
+	</joint>
+</robot>
+
+
+<!-- Joints 
+
+eMb = simp_matrix((bMo*oMw*wMe).inv())
+Jv = Twist(eMb[:3,3],eMb[:3,:3])*sympy.Matrix([[1,0,0,0,0,0],[0,0,0,0,0,1]]).transpose()
+Jcv = simp_matrix(Jv.row_join(eJe))
+exportCpp(Jcv, 'J', args.q)
+-->
