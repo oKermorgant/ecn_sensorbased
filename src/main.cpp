@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         L = vpMatrix::stack(p.interaction(),La);
         J = robot.getCamJacobian();
         cout << "s-sd: " << (s-sd).t() << endl;
-       // vc = -l*L.pseudoInverse()*(s-sd);
+        vc = -l*L.pseudoInverse()*(s-sd);
         cout << "vc: " << vc.t() << endl;
 
         for(auto j: deact)
