@@ -1,18 +1,26 @@
 #include <ecn_sensorbased/pioneer_cam.h>
 #include <vrep_common/simRosGetObjectHandle.h>
 #include <vrep_common/simRosSetObjectPose.h>
+#include <vrep_common/simRosStartSimulation.h>
 #include <visp/vpCameraParameters.h>
 #include <visp/vpPixelMeterConversion.h>
 #include <algorithm>
 
 using namespace std;
 
+
 PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
-{    
-    // joint publisher
+{
+    // restart simulation
+    ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosStartSimulation>("/vrep/simRosStartSimulation");
+    client.waitForExistence();
+    vrep_common::simRosStartSimulation srv_start;
+    client.call(srv_start);
+
+    // joint setpoint publisher
     joint_pub_  =_nh.advertise<vrep_common::JointSetStateData>("/vrep/joint_setpoint", 1);
-    // get handles
-    ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosGetObjectHandle>("/vrep/simRosGetObjectHandle");
+    // get V-REP joint handles
+    client = _nh.serviceClient<vrep_common::simRosGetObjectHandle>("/vrep/simRosGetObjectHandle");
     client.waitForExistence();
     vrep_common::simRosGetObjectHandle srv;
     for(auto joint: {"Pioneer_p3dx_leftMotor", "Pioneer_p3dx_rightMotor", "camera_pan", "camera_tilt"})
@@ -27,33 +35,15 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
         }
     }
 
-    // reset robot pose
-    /*srv.request.objectName = "start_pose";
-    if(client.call(srv))
-    {
-        int pose_id = srv.response.handle;
-        srv.request.objectName = "Pioneer_p3dx";
-        if(client.call(srv))
-        {
-        client = _nh.serviceClient<vrep_common::simRosSetObjectPose>("/vrep/simRosSetObjectPose");
-        int robot_id = srv.response.handle;
-        vrep_common::simRosSetObjectPose srv;
-        srv.request.handle = robot_id;
-        srv.request.relativeToObjectHandle = pose_id;
-        srv.request.pose.orientation.w = 1;
-        client.call(srv);
-        }
-    }*/
-
     // wheels
     radius_ = .0975;
     base_ = .331;
-    w_max_ = 1;
+    w_max_ = 4;
 
     // camera calibration
-    cam_.initFromFov(640,480,vpMath::rad(60), vpMath::rad(60));
+    cam_.initFromFov(640,480,vpMath::rad(60), vpMath::rad(60.*480/640));
 
-    // US sensors
+    // US sensors subscribers, pose, Jacobian, etc.
     s_us_.resize(16);
     s_us_ = 1;
     us_subs_.resize(16);
@@ -82,12 +72,16 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     q_.resize(joint_names_.size());
 
     // image transport
-    s_im_.resize(3);
+    s_im_.resize(2);
     cv::startWindowThread();
-      im_sub_ = it_.subscribe("/vrep/image", 1, &PioneerCam::readImage, this);
+    im_sub_ = it_.subscribe("/vrep/image", 1, &PioneerCam::readImage, this);
     std::cout << "Pioneer init ok" << std::endl;
+    sphere_sub_ = _nh.subscribe("/vrep/sphere", 1, &PioneerCam::readSpherePose, this);
+    // pose
+    target_sub_ = _nh.subscribe("/vrep/target", 1, &PioneerCam::readTargetPose, this);
 
 }
+
 
 void PioneerCam::setVelocity(const vpColVector &v)
 {
@@ -118,10 +112,10 @@ void PioneerCam::setVelocity(const vpColVector &v)
 vpMatrix PioneerCam::getCamJacobian(const vpColVector &_q)
 {
     vpMatrix J(6,4);
-    const double c1 = cos(_q[2]);
-    const double c2 = cos(_q[3]);
-    const double s1 = sin(_q[2]);
-    const double s2 = sin(_q[3]);
+    const double c1 = cos(_q[0]);
+    const double c2 = cos(_q[1]);
+    const double s1 = sin(_q[0]);
+    const double s2 = sin(_q[1]);
     J[0][0] = s1;
     J[0][1] = -0.2*c1 - 0.035*c2;
     J[0][2] = 0.035*s1*c2;
@@ -137,20 +131,20 @@ vpMatrix PioneerCam::getCamJacobian(const vpColVector &_q)
     //J[2][2] = 0;
     //J[2][3] = 0;
 
-    //J[3][0] = 0;
-    //J[3][1] = 0;
-    J[3][2] = c1*c2;
-    J[3][3] = s1*s1 - s2*c1*c1;
+    //J[5][0] = 0;
+    //J[5][1] = 0;
+    //J[5][2] = c1*c2;
+    //J[5][3] = s1*s1 - s2*c1*c1;
 
     //J[4][0] = 0;
     J[4][1] = -c2;
     J[4][2] = s1*c2;
     J[4][3] = -(s2 + 1.0)*s1*c1;
 
-    //J[5][0] = 0;
-    J[5][1] = s2;
-    J[5][2] = s2;
-    J[5][3] = c1*c2;
+    //J[3][0] = 0;
+    J[3][1] = s2;
+    J[3][2] = s2;
+    J[3][3] = c1*c2;
     return J;
 }
 
@@ -171,38 +165,53 @@ void PioneerCam::readJointState(const sensor_msgs::JointStateConstPtr &_msg)
 
 void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
 {
-  try
-  {
     cv::Mat im = cv_bridge::toCvShare(msg, "bgr8")->image;
-    cv::Mat img;
-    cv::cvtColor(im, img, cv::COLOR_BGR2HSV);
-    cv::inRange(img, cv::Scalar(55,0,0), cv::Scalar(65,255,255), img);
-    cv::Canny(img, img, 20, 150);
-    vector<vector<cv::Point> > contours;
-    vector<cv::Vec4i> hierarchy;
-    cv::findContours( img, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
-    std::sort(contours.begin(), contours.end(),
-              [](vector<cv::Point> &c1, vector<cv::Point> &c2)
-              {return cv::contourArea(c1) > cv::contourArea(c2);}
-        );
+    try
+    {
+        cv::Mat img;
+        cv::cvtColor(im, img, cv::COLOR_BGR2HSV);
+        cv::inRange(img, cv::Scalar(55,0,0), cv::Scalar(65,255,255), img);
+        cv::Canny(img, img, 20, 150);
+        vector<vector<cv::Point> > contours;
+        vector<cv::Vec4i> hierarchy;
+        cv::findContours( img, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
+        std::sort(contours.begin(), contours.end(),
+                  [](const vector<cv::Point> &c1, const vector<cv::Point> &c2)
+        {return cv::contourArea(c1) > cv::contourArea(c2);});
 
-    cv::Moments m = cv::moments(contours[0], false);
-    s_im_[0] = m.m10/m.m00;
-    s_im_[1] = m.m01/m.m00;
-    s_im_[2] = m.m00;
-    cv::drawContours(im, contours, 0, cv::Scalar(0,0,255), 2);
+        if(contours.size() > 0)
+        {
+            cv::Moments m = cv::moments(contours[0], false);
 
-    cv::circle(im, pd_, rd_, cv::Scalar(255,0,0), 2);
-    // to normalized values
-    vpPixelMeterConversion::convertPoint(cam_, s_im_[0], s_im_[1], s_im_[0], s_im_[1]);
-    s_im_[2] *= cam_.get_px_inverse()*cam_.get_py_inverse();
+           // s_im_[0] = m.m10/m.m00;
+           // s_im_[1] = m.m01/m.m00;
+            //s_im_[2] = m.m00;
+            cv::drawContours(im, contours, 0, cv::Scalar(0,0,255), 2);
 
+            cv::circle(im, pd_, sqrt(m.m00/M_PI), cv::Scalar(255,0,0), 2);
+            // to normalized values
+            double x,y;
+         // vpPixelMeterConversion::convertPoint(cam_, m.m10/m.m00, m.m01/m.m00, s_im_[0], s_im_[1]);
+        }
+    }
+    catch (...)
+    {
+        ROS_WARN("Could not detect sphere");
+    }
     cv::imshow("view", im);
-    cv::waitKey(30);
-  }
-  catch (cv_bridge::Exception& e)
-  {
-    ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
-  }
+    cv::waitKey(1);
 }
 
+
+void PioneerCam::readTargetPose(const geometry_msgs::PoseStampedConstPtr &msg)
+{
+    target_pose_.x = msg->pose.position.x;
+    target_pose_.y = msg->pose.position.y;
+    target_pose_.theta = 2*atan2(msg->pose.orientation.z, msg->pose.orientation.w);
+}
+
+void PioneerCam::readSpherePose(const geometry_msgs::PoseStampedConstPtr &msg)
+{
+    s_im_[0] = -msg->pose.position.x/msg->pose.position.z;
+    s_im_[1] = -msg->pose.position.y/msg->pose.position.z;
+}

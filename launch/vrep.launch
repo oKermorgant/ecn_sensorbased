@@ -8,4 +8,7 @@
     
     <!-- Load parameters for US sensor positions -->
     <rosparam file="$(find ecn_sensorbased)/launch/us_config.yaml" command="load" ns="sensors"/>
+    
+    <!-- small script to check if control node is running -->
+    <node name="check_vitals" pkg="ecn_sensorbased" type="check_vitals.py" output="screen" respawn="true"/>
 </launch>
