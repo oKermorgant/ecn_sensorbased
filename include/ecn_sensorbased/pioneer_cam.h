@@ -28,15 +28,18 @@ struct USSub
         std::stringstream ss;
         ss << "/vrep/us" << _i+1;
         i = _i;
-      sub_ = _nh.subscribe(ss.str(), 1, &USSub::getUSDistance, this);
+        sub_ = _nh.subscribe(ss.str(), 1, &USSub::getUSDistance, this);
+        t_ = ros::Time::now().toSec();
     }
 
     ros::Subscriber sub_;
     double* d_;
+    double t_;
     int i;
     void getUSDistance(const vrep_common::ProximitySensorDataConstPtr &msg)
     {
         *d_ = msg->detectedPoint.z;
+        t_ = ros::Time::now().toSec();
     }
 };
 
@@ -54,8 +57,16 @@ public:
         vpMeterPixelConversion::convertPoint(cam_, _s[0], _s[1], pd_.x, pd_.y);
     }
 
-    // get Jacobian of camera wrt joint velocities    
-    vpMatrix getCamJacobian(const vpColVector &_q);    
+    inline vpColVector getCamLimits()
+    {
+        vpColVector l(2);
+        l[0] = cam_.get_u0()*cam_.get_px_inverse();
+        l[1] = cam_.get_v0()*cam_.get_py_inverse();
+        return l;
+    }
+
+    // get Jacobian of camera wrt joint velocities
+    vpMatrix getCamJacobian(const vpColVector &_q);
     inline vpMatrix getCamJacobian() {return getCamJacobian(q_);}
 
     geometry_msgs::Pose2D getTargetRelativePose() {return target_pose_;}
@@ -63,13 +74,11 @@ public:
     // get the joint values
     inline vpColVector getJoints() {return q_;}
 
-    // get the image point
-    inline vpColVector getImagePoint() {return s_im_;}
+    // get the current image point
+    inline void getImagePoint(vpColVector &_s) {_s = s_im_;}
 
-    // get Jacobian of US sensor measurement wrt joint velocities
-    // is actually constant
-    inline vpMatrix getUSJacobian(const int &_i) {return us_jacobian_[_i];}
-
+    // get the current measurement and Jacobians of US sensors
+    void getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J);
 
 protected:
 
@@ -77,7 +86,7 @@ protected:
     // wheels
     double radius_, base_, w_max_;
     // US sensors Jacobians
-    std::vector<vpMatrix> us_jacobian_;
+    vpMatrix us_jacobian_;
     // camera position offset
     vpCameraParameters cam_;
 
@@ -101,6 +110,8 @@ protected:
     std::vector<USSub> us_subs_;
     // ultrasound sensor values
     vpColVector s_us_;
+    // ultrasound sensor poses
+    std::vector<geometry_msgs::Pose2D> us_poses_;
     // image point
     vpColVector s_im_;
     cv::Point2d pd_;

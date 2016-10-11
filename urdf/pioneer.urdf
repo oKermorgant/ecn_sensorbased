@@ -25,6 +25,8 @@
  <material name="matbase"/>
     </visual> 
   </link>
+  
+  <link name="wheels"/>  
 
 <link name="neck">
 <visual>
@@ -55,6 +57,12 @@
     </visual>
 </link>
 <!-- Joints -->
+
+<joint name="wheels" type="fixed">
+    	<parent link="wheels" />
+    	<child link="base_link" />
+    	<origin xyz="-0.044515 0 0.0" rpy="0 0 0" />
+	</joint>
 
 	<joint name="camera_pan" type="revolute">
     	<limit lower="-1.5707963267948" upper="1.5707963267948" effort="10" velocity="3" />
@@ -89,7 +97,7 @@
 
 <!-- Joints 
 
-eMb = simp_matrix((bMo*oMw*wMe).inv())
+eMb = simp_matrix((bMf*fMw*wMe).inv())
 Jv = Twist(eMb[:3,3],eMb[:3,:3])*sympy.Matrix([[1,0,0,0,0,0],[0,0,0,0,0,1]]).transpose()
 Jcv = simp_matrix(Jv.row_join(eJe))
 exportCpp(Jcv, 'J', args.q)

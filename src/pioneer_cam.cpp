@@ -47,7 +47,8 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     s_us_.resize(16);
     s_us_ = 1;
     us_subs_.resize(16);
-    us_jacobian_.resize(16);
+    us_jacobian_.resize(16,4);
+    us_poses_.resize(16);
     double x, y, theta;
     for(unsigned int i=0;i<16;++i)
     {
@@ -57,13 +58,12 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
         // sensor pose to Jacobian
         while(!ros::param::has(ss.str()))
             sleep(1);
-        ros::param::get(ss.str() + "/x", x);
-        ros::param::get(ss.str() + "/y", y);
-        ros::param::get(ss.str() + "/theta", theta);
-        us_jacobian_[i].resize(1,4);
-        us_jacobian_[i][0][0] = -cos(theta);    // ds/dv
-        us_jacobian_[i][0][1] = -y;             // ds/dw
+        ros::param::get(ss.str() + "/x", us_poses_[i].x);
+        ros::param::get(ss.str() + "/y", us_poses_[i].y);
+        ros::param::get(ss.str() + "/theta", us_poses_[i].theta);
         // ds/dp = ds/dt = 0
+        us_subs_[i].init(s_us_[i], i+1, _nh);
+        us_jacobian_[i][0] = -cos(us_poses_[i].theta);    // ds/dv
     }
 
     // joints subscriber
@@ -81,6 +81,39 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     target_sub_ = _nh.subscribe("/vrep/target", 1, &PioneerCam::readTargetPose, this);
 
 }
+
+
+void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
+{
+    // update measurements from timestamp
+    const double t = ros::Time::now().toSec();
+    for(unsigned int i=0;i<16;++i)
+        if(t - us_subs_[i].t_ > 0.5)
+            s_us_[i] = 1;
+
+    // for all sensors, get previous and next point in this frame
+    // then compute the lines describing the shape around here
+    double xp,yp,xn,yn,d;
+    geometry_msgs::Pose2D p, p2;
+    for(unsigned int i=0;i<16;++i)
+    {
+        p = us_poses_[i];
+
+        p2 = us_poses_[(i+1)%16];
+        d = s_us_[(i+1)%16];
+        xn = (d*cos(p2.theta) + d*cos(2*p.theta - p2.theta) - p.x*cos(2*p.theta) - p.x + p2.x*cos(2*p.theta) + p2.x - p.y*sin(2*p.theta) + p2.y*sin(2*p.theta))/(2*cos(p.theta));
+        yn = -d*sin(p.theta - p2.theta) + p.x*sin(p.theta) - p2.x*sin(p.theta) - p.y*cos(p.theta) + p2.y*cos(p.theta);
+
+        p2 = us_poses_[(i-1)%16];
+        d = s_us_[(i-1)%16];
+        xp = (d*cos(p2.theta) + d*cos(2*p.theta - p2.theta) - p.x*cos(2*p.theta) - p.x + p2.x*cos(2*p.theta) + p2.x - p.y*sin(2*p.theta) + p2.y*sin(2*p.theta))/(2*cos(p.theta));
+        yp = -d*sin(p.theta - p2.theta) + p.x*sin(p.theta) - p2.x*sin(p.theta) - p.y*cos(p.theta) + p2.y*cos(p.theta);
+
+        // get corresponding line
+        us_jacobian_[i][1] = -p.y + s_us_[i]*(yn-yp)/(xn-xp);             // ds/dw
+    }
+}
+
 
 
 void PioneerCam::setVelocity(const vpColVector &v)
@@ -109,6 +142,7 @@ void PioneerCam::setVelocity(const vpColVector &v)
     joint_pub_.publish(joint_setpoint_);
 }
 
+
 vpMatrix PioneerCam::getCamJacobian(const vpColVector &_q)
 {
     vpMatrix J(6,4);
@@ -116,35 +150,32 @@ vpMatrix PioneerCam::getCamJacobian(const vpColVector &_q)
     const double c2 = cos(_q[1]);
     const double s1 = sin(_q[0]);
     const double s2 = sin(_q[1]);
+
     J[0][0] = s1;
-    J[0][1] = -0.2*c1 - 0.035*c2;
-    J[0][2] = 0.035*s1*c2;
-    J[0][3] = -0.035*(s2 + 1.0)*s1*c1;
-
+    J[0][1] = -0.155485*c1 - 0.035*c2;
+    J[0][2] = -0.035*c2;
+    //J[0][3] = 0;
     J[1][0] = s2*c1;
-    J[1][1] = 0.04*s1*s2;
-    J[1][2] = -0.035*c1*c2;
-    J[1][3] = 0.035*s2*c1*c1 + 0.035*c1*c1 - 0.035;
-
+    //J[1][1] = 0;
+    //J[1][2] = 0;
+    J[1][3] = -0.035;
     J[2][0] = c1*c2;
-    J[2][1] = 0.04*s1*c2;
+    //J[2][1] = 0;
     //J[2][2] = 0;
     //J[2][3] = 0;
-
-    //J[5][0] = 0;
-    //J[5][1] = 0;
-    //J[5][2] = c1*c2;
-    //J[5][3] = s1*s1 - s2*c1*c1;
-
+    //J[3][0] = 0;
+    //J[3][1] = 0;
+    //J[3][2] = 0;
+    J[3][3] = 1.;
     //J[4][0] = 0;
     J[4][1] = -c2;
-    J[4][2] = s1*c2;
-    J[4][3] = -(s2 + 1.0)*s1*c1;
+    J[4][2] = -c2;
+    //J[4][3] = 0;
+    //J[5][0] = 0;
+    J[5][1] = s2;
+    J[5][2] = s2;
+    //J[5][3] = 0;
 
-    //J[3][0] = 0;
-    J[3][1] = s2;
-    J[3][2] = s2;
-    J[3][3] = c1*c2;
     return J;
 }
 
@@ -183,15 +214,15 @@ void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
         {
             cv::Moments m = cv::moments(contours[0], false);
 
-           // s_im_[0] = m.m10/m.m00;
-           // s_im_[1] = m.m01/m.m00;
+            // s_im_[0] = m.m10/m.m00;
+            // s_im_[1] = m.m01/m.m00;
             //s_im_[2] = m.m00;
             cv::drawContours(im, contours, 0, cv::Scalar(0,0,255), 2);
 
             cv::circle(im, pd_, sqrt(m.m00/M_PI), cv::Scalar(255,0,0), 2);
             // to normalized values
             double x,y;
-         // vpPixelMeterConversion::convertPoint(cam_, m.m10/m.m00, m.m01/m.m00, s_im_[0], s_im_[1]);
+            // vpPixelMeterConversion::convertPoint(cam_, m.m10/m.m00, m.m01/m.m00, s_im_[0], s_im_[1]);
         }
     }
     catch (...)
