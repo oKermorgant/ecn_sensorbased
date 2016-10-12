@@ -70,25 +70,29 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
         c = cos(us_poses_[i].theta);
         s = sin(us_poses_[i].theta);
         us_jac_[i][0][0] = c;
-        us_jac_[i][0][1] = -x*c - y*s;
+        us_jac_[i][0][1] = x*s - y*c;
         us_jac_[i][1][0] = -s;
-        us_jac_[i][1][1] = x*s-y*c;
+        us_jac_[i][1][1] = x*c+y*s;
         us_jac_[i][2][0] = 0;
         us_jac_[i][2][1] = 1;
     }
 
     // joints subscriber
+    joint_ok_ = false;
     joint_sub_ = _nh.subscribe("/vrep/joint_states", 1, &PioneerCam::readJointState, this);
     joint_names_ = {"camera_pan", "camera_tilt"};
     q_.resize(joint_names_.size());
 
     // image transport
+    im_ok_ = false;
     s_im_.resize(2);
     cv::startWindowThread();
     im_sub_ = it_.subscribe("/vrep/image", 1, &PioneerCam::readImage, this);
     std::cout << "Pioneer init ok" << std::endl;
     sphere_sub_ = _nh.subscribe("/vrep/sphere", 1, &PioneerCam::readSpherePose, this);
+
     // pose
+    target_ok_ = false;
     target_sub_ = _nh.subscribe("/vrep/target", 1, &PioneerCam::readTargetPose, this);
 
 }
@@ -138,8 +142,8 @@ void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
             d = s_us_[i];
             a = 0.5*((xn-d)/yn + (xp-d)/yp);
            // cout << " -> a = " << a << endl;
-            dDdX[0][1] = a;
-            dDdX[0][2] = a*d;
+            //dDdX[0][1] = a;
+            //dDdX[0][2] = -a*d;
 
             //us_jacobian_[i][1] = p.x*cos(p.theta)-p.y*sin(p.theta) + s_us_[i]*a;             // ds/dw
             //cout << " -> slope = " << a << endl;
@@ -155,7 +159,7 @@ void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
             AB = Y.inverseByQR() * X;
             a = AB[0];
             b = AB[1];
-            //dDdX[0][1] = -b;
+            dDdX[0][1] = -b;
 
             // test
             //cout << "pn: " << a*yn*yn + b*yn + d - xn << endl;
@@ -188,15 +192,15 @@ void PioneerCam::setVelocity(const vpColVector &v)
     joint_setpoint_.values.data[1] = (v[0]+base_*v[1])/radius_;
     double a = std::max(vpMath::abs(joint_setpoint_.values.data[0])/w_max_, vpMath::abs(joint_setpoint_.values.data[1])/w_max_);
     // scale wheel velocities
-    if(a>1)
-    {
-        joint_setpoint_.values.data[0] *= 1./a;
-        joint_setpoint_.values.data[1] *= 1./a;
-    }
+    if(a<1)
+        a = 1;
+
+    joint_setpoint_.values.data[0] *= 1./a;
+    joint_setpoint_.values.data[1] *= 1./a;
 
     // copy camera joints
-    joint_setpoint_.values.data[2] = v[2];
-    joint_setpoint_.values.data[3] = v[3];
+    joint_setpoint_.values.data[2] = v[2]/a;
+    joint_setpoint_.values.data[3] = v[3]/a;
 
     joint_pub_.publish(joint_setpoint_);
 }
@@ -241,6 +245,7 @@ vpMatrix PioneerCam::getCamJacobian(const vpColVector &_q)
 
 void PioneerCam::readJointState(const sensor_msgs::JointStateConstPtr &_msg)
 {
+    joint_ok_ = true;
     for(unsigned int j=0;j<joint_names_.size();++j)
     {
         for(unsigned int i=0;i<_msg->name.size();++i)
@@ -256,6 +261,7 @@ void PioneerCam::readJointState(const sensor_msgs::JointStateConstPtr &_msg)
 
 void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
 {
+
     cv::Mat im = cv_bridge::toCvShare(msg, "bgr8")->image;
     try
     {
@@ -296,6 +302,7 @@ void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
 
 void PioneerCam::readTargetPose(const geometry_msgs::PoseStampedConstPtr &msg)
 {
+    target_ok_ = true;
     target_pose_.x = msg->pose.position.x;
     target_pose_.y = msg->pose.position.y;
     target_pose_.theta = 2*atan2(msg->pose.orientation.z, msg->pose.orientation.w);
@@ -303,6 +310,7 @@ void PioneerCam::readTargetPose(const geometry_msgs::PoseStampedConstPtr &msg)
 
 void PioneerCam::readSpherePose(const geometry_msgs::PoseStampedConstPtr &msg)
 {
+    im_ok_ = true;
     s_im_[0] = -msg->pose.position.x/msg->pose.position.z;
     s_im_[1] = -msg->pose.position.y/msg->pose.position.z;
 }

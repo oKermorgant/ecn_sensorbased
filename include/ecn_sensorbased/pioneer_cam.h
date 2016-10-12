@@ -28,7 +28,7 @@ struct USSub
         std::stringstream ss;
         ss << "/vrep/us" << _i+1;
         i = _i;
-        if(abs(_i-4)<2)
+        //if(abs(_i-4)<2)
             sub_ = _nh.subscribe(ss.str(), 1, &USSub::getUSDistance, this);
         t_ = ros::Time::now().toSec();
     }
@@ -51,6 +51,9 @@ public:
 
     // send a velocity to the joints
     void setVelocity(const vpColVector &v);
+
+    // if the robot has received sensor data
+    bool ok() {return joint_ok_ && im_ok_ && target_ok_;}
 
     // gives the desired visual features
     void setSd(vpColVector _s)
@@ -106,6 +109,8 @@ protected:
     // target positions
     ros::Subscriber target_sub_, sphere_sub_;
     geometry_msgs::Pose2D target_pose_;
+    // init subs
+    bool joint_ok_, us_ok_, im_ok_, target_ok_;
 
     // handle for all US subscriptions
     std::vector<USSub> us_subs_;
