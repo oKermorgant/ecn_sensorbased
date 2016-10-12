@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # set transforms as ros param
     get_handle = rospy.ServiceProxy('/vrep/simRosGetObjectHandle', simRosGetObjectHandle)
     pioneer_ID = get_handle('Pioneer_p3dx').handle
-    us_ID = [get_handle('Pioneer_p3dx_ultrasonicSensor%i' % (i+1)).handle for i in us_range]
+    us_ID = [get_handle('Proximity_sensor%i' % (i+1)).handle for i in us_range]
     get_pose = rospy.ServiceProxy('/vrep/simRosGetObjectPose', simRosGetObjectPose)
     us_Pose = [get_pose(n, pioneer_ID).pose.pose for n in us_ID]
     

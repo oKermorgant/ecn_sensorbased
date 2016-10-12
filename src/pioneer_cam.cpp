@@ -5,7 +5,7 @@
 #include <visp/vpCameraParameters.h>
 #include <visp/vpPixelMeterConversion.h>
 #include <algorithm>
-
+#include <visp/vpSubMatrix.h>
 using namespace std;
 
 
@@ -47,9 +47,9 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     s_us_.resize(16);
     s_us_ = 1;
     us_subs_.resize(16);
-    us_jacobian_.resize(16,4);
+    us_jac_.resize(16);
     us_poses_.resize(16);
-    double x, y, theta;
+    double x, y, c, s;
     for(unsigned int i=0;i<16;++i)
     {
         std::stringstream ss;
@@ -61,9 +61,20 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
         ros::param::get(ss.str() + "/x", us_poses_[i].x);
         ros::param::get(ss.str() + "/y", us_poses_[i].y);
         ros::param::get(ss.str() + "/theta", us_poses_[i].theta);
-        // ds/dp = ds/dt = 0
         us_subs_[i].init(s_us_[i], i+1, _nh);
-        us_jacobian_[i][0] = -cos(us_poses_[i].theta);    // ds/dv
+
+        // Jacobian of sensor position wrt robot (v,w,pan,tilt)
+        us_jac_[i].resize(3,4);
+        x = us_poses_[i].x;
+        y = us_poses_[i].y;
+        c = cos(us_poses_[i].theta);
+        s = sin(us_poses_[i].theta);
+        us_jac_[i][0][0] = c;
+        us_jac_[i][0][1] = -x*c - y*s;
+        us_jac_[i][1][0] = -s;
+        us_jac_[i][1][1] = x*s-y*c;
+        us_jac_[i][2][0] = 0;
+        us_jac_[i][2][1] = 1;
     }
 
     // joints subscriber
@@ -85,32 +96,80 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 
 void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
 {
+    _J.resize(16,4);
     // update measurements from timestamp
     const double t = ros::Time::now().toSec();
     for(unsigned int i=0;i<16;++i)
         if(t - us_subs_[i].t_ > 0.5)
             s_us_[i] = 1;
+    _s = s_us_;
 
     // for all sensors, get previous and next point in this frame
     // then compute the lines describing the shape around here
-    double xp,yp,xn,yn,d;
+    double xp,yp,xn,yn,d,c,s,a,b;
+    vpMatrix Y(2,2);vpColVector X(2),AB;
+    vpMatrix dDdX(1,3);
+    vpSubMatrix Ji;
     geometry_msgs::Pose2D p, p2;
     for(unsigned int i=0;i<16;++i)
     {
-        p = us_poses_[i];
+        dDdX = 0;
+        if(s_us_[i] != 1)
+        {
+            p = us_poses_[i];
+            c = cos(p.theta);
+            s = sin(p.theta);
 
-        p2 = us_poses_[(i+1)%16];
-        d = s_us_[(i+1)%16];
-        xn = (d*cos(p2.theta) + d*cos(2*p.theta - p2.theta) - p.x*cos(2*p.theta) - p.x + p2.x*cos(2*p.theta) + p2.x - p.y*sin(2*p.theta) + p2.y*sin(2*p.theta))/(2*cos(p.theta));
-        yn = -d*sin(p.theta - p2.theta) + p.x*sin(p.theta) - p2.x*sin(p.theta) - p.y*cos(p.theta) + p2.y*cos(p.theta);
+            p2 = us_poses_[(i+1)%16];
+            d = s_us_[(i+1)%16];
+            xn = d*cos(p.theta - p2.theta) - p.x*c + p2.x*c - p.y*s + p2.y*s;
+            yn = -d*sin(p.theta - p2.theta) + p.x*s - p2.x*s - p.y*c + p2.y*c;
 
-        p2 = us_poses_[(i-1)%16];
-        d = s_us_[(i-1)%16];
-        xp = (d*cos(p2.theta) + d*cos(2*p.theta - p2.theta) - p.x*cos(2*p.theta) - p.x + p2.x*cos(2*p.theta) + p2.x - p.y*sin(2*p.theta) + p2.y*sin(2*p.theta))/(2*cos(p.theta));
-        yp = -d*sin(p.theta - p2.theta) + p.x*sin(p.theta) - p2.x*sin(p.theta) - p.y*cos(p.theta) + p2.y*cos(p.theta);
+            p2 = us_poses_[(i-1)%16];
+            d = s_us_[(i-1)%16];
+            xp = d*cos(p.theta - p2.theta) - p.x*c + p2.x*c - p.y*s + p2.y*s;
+            yp = -d*sin(p.theta - p2.theta) + p.x*s - p2.x*s - p.y*c + p2.y*c;
 
-        // get corresponding line
-        us_jacobian_[i][1] = -p.y + s_us_[i]*(yn-yp)/(xn-xp);             // ds/dw
+            //cout << "us #" << i+1 << ": d = " << s_us_[i] << ", pp = (" << xp  << ", " << yp << "), pn = (" << xn << ", " << yn << ")";
+
+            // local derivative
+            dDdX[0][0] = -1;
+            // get corresponding line
+            d = s_us_[i];
+            a = 0.5*((xn-d)/yn + (xp-d)/yp);
+           // cout << " -> a = " << a << endl;
+            dDdX[0][1] = a;
+            dDdX[0][2] = a*d;
+
+            //us_jacobian_[i][1] = p.x*cos(p.theta)-p.y*sin(p.theta) + s_us_[i]*a;             // ds/dw
+            //cout << " -> slope = " << a << endl;
+            //dx/dtheta = (-b*tan(t) + sqrt(-4*a*d*tan(t)**2 + b**2*tan(t)**2 - 2*b*tan(t) (t)**2)
+
+            // get parabol
+            Y[0][0] = yn*yn;
+            Y[0][1] = yn;
+            Y[1][0] = yp*yp;
+            Y[1][1] = yp;
+            X[0] = xn-d;
+            X[1] = xp-d;
+            AB = Y.inverseByQR() * X;
+            a = AB[0];
+            b = AB[1];
+            //dDdX[0][1] = -b;
+
+            // test
+            //cout << "pn: " << a*yn*yn + b*yn + d - xn << endl;
+            //cout << "pp: " << a*yp*yp + b*yp + d - xp << endl;
+
+
+
+            //us_jacobian_[i][1] = p.x*cos(p.theta)-p.y*sin(p.theta);             // ds/dw
+        }
+
+        Ji.init(_J, i, 0, 1, 4);
+        Ji = dDdX * us_jac_[i];
+
+
     }
 }
 
@@ -178,6 +237,7 @@ vpMatrix PioneerCam::getCamJacobian(const vpColVector &_q)
 
     return J;
 }
+
 
 void PioneerCam::readJointState(const sensor_msgs::JointStateConstPtr &_msg)
 {

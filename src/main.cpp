@@ -66,8 +66,8 @@ int main(int argc, char** argv)
         // us
         robot.getUSMeasureAndJacobian(us, Jus);
         putAt(J, Jus, 4, 0);
-        cout << "us: " << us.t() << endl;
-        putAt(e, -0.1*(us - us_d), 4);
+        //cout << "us: " << us.t() << endl;
+        putAt(e, -0.01*(us - us_d), 4);
 
         // image weights
         H[2][2] = weightDouble(s[0], xy_act[0], xy_lim[0]);

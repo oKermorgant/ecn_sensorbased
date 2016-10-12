@@ -9,8 +9,6 @@ double weight(double s, double s_act, double s_max)
 {
     if(s < s_act)
         return 0;
-    std::cout << "weight: s = " << s << ", s_act = " << s_act << ", s_max = " << s_max <<
-                 " -> " << (s-s_act)/(s_max-s) << std::endl;
     return (s-s_act)/(s_max-s);
 }
 

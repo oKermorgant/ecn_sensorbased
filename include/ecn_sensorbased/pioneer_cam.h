@@ -28,7 +28,8 @@ struct USSub
         std::stringstream ss;
         ss << "/vrep/us" << _i+1;
         i = _i;
-        sub_ = _nh.subscribe(ss.str(), 1, &USSub::getUSDistance, this);
+        if(abs(_i-4)<2)
+            sub_ = _nh.subscribe(ss.str(), 1, &USSub::getUSDistance, this);
         t_ = ros::Time::now().toSec();
     }
 
@@ -86,7 +87,7 @@ protected:
     // wheels
     double radius_, base_, w_max_;
     // US sensors Jacobians
-    vpMatrix us_jacobian_;
+    std::vector<vpMatrix> us_jac_;
     // camera position offset
     vpCameraParameters cam_;
 
