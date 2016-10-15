@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     vpMatrix H;H.eye(J.getRows());
 
     // image visibility
-    vpColVector xy_lim = 0.9*robot.getCamLimits();
+    vpColVector xy_lim = 0.8*robot.getCamLimits();
     vpColVector xy_act = 0.7*xy_lim;
     vpColVector s, sd(2);
     robot.setSd(sd);
@@ -65,14 +65,6 @@ int main(int argc, char** argv)
     int it = 0;
     vpColVector v;
 
-    okSolveQP qp;
-    qp.addEquality(J1, e1, 1, "position");
-    //qp.addInequality(J2, im_up, 0, "point upper");
-    //qp.addInequality(J2lo, im_lo, 0, "point lower");
-    qp.addInequality(J3, us_lo, 0, "us");
-    //qp.addInequality(Jw, ew, 0, "wheels");
-    qp.print();
-
     while(ros::ok())
     {
         if(robot.ok())
@@ -106,31 +98,27 @@ int main(int argc, char** argv)
             H[3][3] = weightDouble(s[1], xy_act[1], xy_lim[1]);
             // us weights
             for(int i=4;i<20;++i)
-                H[i][i] = weight(-us[i-4], -0.5, -0.2);
+                H[i][i] = 0;//weight(-us[i-4], -0.5, -0.2);
 
-            //v = (H*J).pseudoInverse() * H * e;
+            v = (H*J).pseudoInverse() * H * e;
 
 
             // QP approach
             // im up
-            /*putAt(C, J2, 0,0);
+            cout << "xy lim: " << xy_lim.t() << endl;
+            cout << "s: " << s.t() << endl;
+
+            putAt(C, J2, 0,0);
             putAt(d, lc*(xy_lim - s), 0);
             // im low
-            putAt(C, -J2, 2,0);
-            putAt(d, -lc*(xy_lim + s), 2);
+            //putAt(C, -J2, 2,0);
+            //putAt(d, -lc*(xy_lim + s), 2);
             // US
-            putAt(C, -J3, 4,0);
-            putAt(d, 1*(us_lim - us), 4);*/
+            //putAt(C, -J3, 4,0);
+            //putAt(d, 1*(us_lim - us), 4);
 
-            //okSolveQP::solveQPi(J1, e1, C, d, v);
-
-            J2lo = -J2;
-            im_up = lc*(xy_lim - s);
-            im_lo = -lc*(xy_lim + s);
-            J3 = -J3;
-            us_lo = 0.01*(us_lim - us);
-            qp.solveCascade(v);
-
+            //solve_qp::solveQPi(J1, e1, C, d, v);
+            //v = J1.pseudoInverse() * e1;
 
             cout << "v: " << v.t() << endl;
 

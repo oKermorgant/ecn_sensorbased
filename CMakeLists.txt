@@ -53,5 +53,5 @@ add_executable(pioneer  src/main.cpp
                         include/ecn_sensorbased/pioneer_cam.h src/pioneer_cam.cpp
                         include/ecn_sensorbased/utils.h
                         include/ecn_sensorbased/fusion.h
-                        include/ecn_sensorbased/qp.h src/qp.cpp)
+                        include/ecn_sensorbased/qp.h)
 target_link_libraries(pioneer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${VISP_LIBRARIES})
