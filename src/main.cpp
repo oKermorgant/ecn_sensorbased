@@ -98,26 +98,25 @@ int main(int argc, char** argv)
             H[3][3] = weightDouble(s[1], xy_act[1], xy_lim[1]);
             // us weights
             for(int i=4;i<20;++i)
-                H[i][i] = 0;//weight(-us[i-4], -0.5, -0.2);
+                H[i][i] = weight(-us[i-4], -0.5, -0.2);
 
-            v = (H*J).pseudoInverse() * H * e;
+            //v = (H*J).pseudoInverse() * H * e;
 
 
             // QP approach
             // im up
             cout << "xy lim: " << xy_lim.t() << endl;
             cout << "s: " << s.t() << endl;
-
             putAt(C, J2, 0,0);
             putAt(d, lc*(xy_lim - s), 0);
             // im low
-            //putAt(C, -J2, 2,0);
-            //putAt(d, -lc*(xy_lim + s), 2);
+            putAt(C, -J2, 2,0);
+            putAt(d, lc*(xy_lim + s), 2);
             // US
-            //putAt(C, -J3, 4,0);
-            //putAt(d, 1*(us_lim - us), 4);
+            putAt(C, -J3, 4,0);
+            putAt(d, 10*(-us_lim + us), 4);
 
-            //solve_qp::solveQPi(J1, e1, C, d, v);
+            solve_qp::solveQPi(J1, e1, C, d, v);
             //v = J1.pseudoInverse() * e1;
 
             cout << "v: " << v.t() << endl;

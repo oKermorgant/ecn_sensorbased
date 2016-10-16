@@ -142,8 +142,8 @@ void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
             d = s_us_[i];
             a = 0.5*((xn-d)/yn + (xp-d)/yp);
            // cout << " -> a = " << a << endl;
-            //dDdX[0][1] = a;
-            //dDdX[0][2] = -a*d;
+            dDdX[0][1] = a;
+            dDdX[0][2] = -a*d;
 
             //us_jacobian_[i][1] = p.x*cos(p.theta)-p.y*sin(p.theta) + s_us_[i]*a;             // ds/dw
             //cout << " -> slope = " << a << endl;
