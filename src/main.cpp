@@ -100,7 +100,7 @@ int main(int argc, char** argv)
             for(int i=4;i<20;++i)
                 H[i][i] = weight(-us[i-4], -0.5, -0.2);
 
-            //v = (H*J).pseudoInverse() * H * e;
+            v = (H*J).pseudoInverse() * H * e;
 
 
             // QP approach
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
             putAt(C, -J3, 4,0);
             putAt(d, 10*(-us_lim + us), 4);
 
-            solve_qp::solveQPi(J1, e1, C, d, v);
+            //solve_qp::solveQPi(J1, e1, C, d, v);
             //v = J1.pseudoInverse() * e1;
 
             cout << "v: " << v.t() << endl;

@@ -72,7 +72,7 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
         us_jac_[i][0][0] = c;
         us_jac_[i][0][1] = x*s - y*c;
         us_jac_[i][1][0] = -s;
-        us_jac_[i][1][1] = x*c+y*s;
+        us_jac_[i][1][1] = x*c - y*s;
         us_jac_[i][2][0] = 0;
         us_jac_[i][2][1] = 1;
     }
@@ -199,8 +199,8 @@ void PioneerCam::setVelocity(const vpColVector &v)
     joint_setpoint_.values.data[1] *= 1./a;
 
     // copy camera joints
-    joint_setpoint_.values.data[2] = v[2]/a;
-    joint_setpoint_.values.data[3] = v[3]/a;
+    joint_setpoint_.values.data[2] = v[2];
+    joint_setpoint_.values.data[3] = v[3];
 
     joint_pub_.publish(joint_setpoint_);
 }
