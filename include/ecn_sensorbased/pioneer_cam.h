@@ -20,6 +20,7 @@
 #include <geometry_msgs/PoseStamped.h>
 
 
+// structure for ultrasonic sensor subscribers
 struct USSub
 {
     void init(double &_d, int _i, ros::NodeHandle &_nh)
@@ -55,12 +56,22 @@ public:
     // if the robot has received sensor data
     bool ok() {return joint_ok_ && im_ok_ && target_ok_;}
 
+    // get target pose in robot frame
+    geometry_msgs::Pose2D getTargetRelativePose() {return target_pose_;}
+
+    // get the joint values
+    inline vpColVector getJoints() {return q_;}
+
+    // get the current image point
+    inline void getImagePoint(vpColVector &_s) {_s = s_im_;}
+
     // gives the desired visual features
     void setSd(vpColVector _s)
     {
         vpMeterPixelConversion::convertPoint(cam_, _s[0], _s[1], pd_.x, pd_.y);
     }
 
+    // get the camera x-y visibility limits
     inline vpColVector getCamLimits()
     {
         vpColVector l(2);
@@ -72,14 +83,6 @@ public:
     // get Jacobian of camera wrt joint velocities
     vpMatrix getCamJacobian(const vpColVector &_q);
     inline vpMatrix getCamJacobian() {return getCamJacobian(q_);}
-
-    geometry_msgs::Pose2D getTargetRelativePose() {return target_pose_;}
-
-    // get the joint values
-    inline vpColVector getJoints() {return q_;}
-
-    // get the current image point
-    inline void getImagePoint(vpColVector &_s) {_s = s_im_;}
 
     // get the current measurement and Jacobians of US sensors
     void getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J);

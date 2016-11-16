@@ -12,7 +12,7 @@ double weight(double s, double s_act, double s_max)
     return (s-s_act)/(s_max-s);
 }
 
-double weightDouble(double s, double s_act, double s_max)
+double weightBothSigns(double s, double s_act, double s_max)
 {
     return weight(s, s_act, s_max) + weight(-s, s_act, s_max);
 }

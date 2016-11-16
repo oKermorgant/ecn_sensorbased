@@ -134,7 +134,7 @@ void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
             xp = d*cos(p.theta - p2.theta) - p.x*c + p2.x*c - p.y*s + p2.y*s;
             yp = -d*sin(p.theta - p2.theta) + p.x*s - p2.x*s - p.y*c + p2.y*c;
 
-            //cout << "us #" << i+1 << ": d = " << s_us_[i] << ", pp = (" << xp  << ", " << yp << "), pn = (" << xn << ", " << yn << ")";
+            cout << "us #" << i+1 << ": d = " << s_us_[i] << ", pp = (" << xp  << ", " << yp << "), pn = (" << xn << ", " << yn << ")";
 
             // local derivative
             dDdX[0][0] = -1;
@@ -176,7 +176,6 @@ void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
 
     }
 }
-
 
 
 void PioneerCam::setVelocity(const vpColVector &v)
@@ -263,6 +262,7 @@ void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
 {
 
     cv::Mat im = cv_bridge::toCvShare(msg, "bgr8")->image;
+
     try
     {
         cv::Mat img;
@@ -280,15 +280,11 @@ void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
         {
             cv::Moments m = cv::moments(contours[0], false);
 
+            // get it form the actual simulation
             // s_im_[0] = m.m10/m.m00;
             // s_im_[1] = m.m01/m.m00;
             //s_im_[2] = m.m00;
             cv::drawContours(im, contours, 0, cv::Scalar(0,0,255), 2);
-
-            cv::circle(im, pd_, sqrt(m.m00/M_PI), cv::Scalar(255,0,0), 2);
-            // to normalized values
-            double x,y;
-            // vpPixelMeterConversion::convertPoint(cam_, m.m10/m.m00, m.m01/m.m00, s_im_[0], s_im_[1]);
         }
     }
     catch (...)

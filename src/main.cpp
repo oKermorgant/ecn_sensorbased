@@ -94,8 +94,8 @@ int main(int argc, char** argv)
 
 
             // image weights
-            H[2][2] = weightDouble(s[0], xy_act[0], xy_lim[0]);
-            H[3][3] = weightDouble(s[1], xy_act[1], xy_lim[1]);
+            H[2][2] = weightBothSigns(s[0], xy_act[0], xy_lim[0]);
+            H[3][3] = weightBothSigns(s[1], xy_act[1], xy_lim[1]);
             // us weights
             for(int i=4;i<20;++i)
                 H[i][i] = weight(-us[i-4], -0.5, -0.2);

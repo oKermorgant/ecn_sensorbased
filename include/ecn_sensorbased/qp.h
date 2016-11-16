@@ -46,30 +46,10 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
         return;
     }
 
-    /*cout << "solveQP: dimensions" << endl;
-    cout << "Q: " << Q.getRows() << "x" << Q.getCols() << " - r: " << r.getRows() << endl <<
-    "A: " << A.getRows() << "x" << A.getCols() << " - b: " << b.getRows() << endl <<
-    "C: " << C.getRows() << "x" << C.getCols() << " - d: " << d.getRows() << endl;*/
-    /*  printvar("Q", Q);
-    printvar("r", r);
-    printvar("A", A);
-    printvar("b", b);
-    printvar("C", C);
-    printvar("d", d);*/
 
     unsigned int i,j;
     const unsigned int nA = _A.getRows();
     const unsigned int nC = _C.getRows();
-
-    /*cout << "constraints:";
-    for(unsigned int i=0;i<nC;++i)
-    {
-        if(active[i])
-            cout << " true";
-        else
-            cout << " false";
-    }
-    cout << endl;*/
 
     std::vector<bool> active(nC, false);
 
@@ -103,12 +83,6 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
     while ( true )
     {
         activePast.push_back ( active );
-        /* cout << "M: " << M.getRows() << "x" << M.getCols() << endl;
-        cout << "v: " << v.getRows() << endl;
-        cout << "active: ";
-        for(i=0;i<active.size();++i)
-            cout << active[i] << ", ";
-        cout << endl;*/
 
         // update A and b with activated inequality constraints
         _A.resize(nA + nAct, n, false );
