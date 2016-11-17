@@ -50,11 +50,20 @@ class PioneerCam
 public:
     PioneerCam(ros::NodeHandle &_nh);
 
+    // sampling time loop
+    inline void loop() {ros::spinOnce(); rate_.sleep();}
+
     // send a velocity to the joints
     void setVelocity(const vpColVector &v);
 
     // if the robot has received sensor data
     bool ok() {return joint_ok_ && im_ok_ && target_ok_;}
+
+    // activate velocity limits
+    inline void activateVelocityLimits() {vel_lim_ = true;}
+
+    // activate joint limits
+    inline void activateJointLimits() {joint_lim_ = true;}
 
     // get target pose in robot frame
     geometry_msgs::Pose2D getTargetRelativePose() {return target_pose_;}
@@ -89,9 +98,14 @@ public:
 
 protected:
 
+    // sampling time
+    ros::Rate rate_;
+    double dt_;
+
     // robot model
     // wheels
     double radius_, base_, w_max_;
+    bool vel_lim_, joint_lim_;
     // US sensors Jacobians
     std::vector<vpMatrix> us_jac_;
     // camera position offset
@@ -124,6 +138,7 @@ protected:
     // image point
     vpColVector s_im_;
     cv::Point2d pd_;
+
     // callbacks
     void readJointState(const sensor_msgs::JointStateConstPtr &_msg);
     void readImage(const sensor_msgs::ImageConstPtr& msg);

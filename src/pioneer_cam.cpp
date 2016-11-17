@@ -9,8 +9,13 @@
 using namespace std;
 
 
-PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
+PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh), dt_(0.1), rate_(1/dt_)
 {
+    // rate
+    //dt_ = 0.01;
+   // ros::Rate rate(1/dt_);
+   // rate_ = rate;
+
     // restart simulation
     ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosStartSimulation>("/vrep/simRosStartSimulation");
     client.waitForExistence();
@@ -19,6 +24,7 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 
     // joint setpoint publisher
     joint_pub_  =_nh.advertise<vrep_common::JointSetStateData>("/vrep/joint_setpoint", 1);
+    joint_lim_ = false;
     // get V-REP joint handles
     client = _nh.serviceClient<vrep_common::simRosGetObjectHandle>("/vrep/simRosGetObjectHandle");
     client.waitForExistence();
@@ -39,6 +45,7 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     radius_ = .0975;
     base_ = .331;
     w_max_ = 4;
+    vel_lim_ = false;
 
     // camera calibration
     cam_.initFromFov(640,480,vpMath::rad(60), vpMath::rad(60.*480/640));
@@ -190,8 +197,18 @@ void PioneerCam::setVelocity(const vpColVector &v)
     joint_setpoint_.values.data[0] = (v[0]-base_*v[1])/radius_;
     joint_setpoint_.values.data[1] = (v[0]+base_*v[1])/radius_;
     double a = std::max(vpMath::abs(joint_setpoint_.values.data[0])/w_max_, vpMath::abs(joint_setpoint_.values.data[1])/w_max_);
-    // scale wheel velocities
     if(a<1)
+        a = 1;
+
+    // scale wheel velocities if activated
+    if(vel_lim_)
+    {
+        if(vpMath::abs(joint_setpoint_.values.data[0])/w_max_ > 1)
+            cout << "*** Left wheel velocity above limit ***" << endl;
+        if(vpMath::abs(joint_setpoint_.values.data[1])/w_max_ > 1)
+            cout << "*** Right wheel velocity above limit ***" << endl;
+    }
+    else
         a = 1;
 
     joint_setpoint_.values.data[0] *= 1./a;

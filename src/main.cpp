@@ -8,11 +8,16 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+
     ros::init(argc, argv, "control_node");
     ros::NodeHandle nh;
 
     PioneerCam robot(nh);
+
     ros::Rate loop(10);
+
+    // to activate the wheel velocity limits
+    robot.activateVelocityLimits();
 
     // Jacobians
     vpMatrix J1(2,4), J2(2,4), J(20,4);
@@ -86,21 +91,14 @@ int main(int argc, char** argv)
             putAt(J, J2, 2, 0);
             putAt(e, e2, 2);
 
-            // us
-            robot.getUSMeasureAndJacobian(us, J3);
-            putAt(J, J3, 4, 0);
-            //cout << "us: " << us.t() << endl;
-            putAt(e, -0.01*(us - us_d), 4);
-
-
             // image weights
-            H[2][2] = weightBothSigns(s[0], xy_act[0], xy_lim[0]);
-            H[3][3] = weightBothSigns(s[1], xy_act[1], xy_lim[1]);
+            H[2][2] = 0.0001*weightBothSigns(s[0], xy_act[0], xy_lim[0]);
+            H[3][3] = 0.0001*weightBothSigns(s[1], xy_act[1], xy_lim[1]);
             // us weights
             for(int i=4;i<20;++i)
                 H[i][i] = weight(-us[i-4], -0.5, -0.2);
 
-            v = (H*J).pseudoInverse() * H * e;
+            //v = (H*J).pseudoInverse() * H * e;
 
 
             // QP approach
@@ -113,18 +111,21 @@ int main(int argc, char** argv)
             putAt(C, -J2, 2,0);
             putAt(d, lc*(xy_lim + s), 2);
             // US
-            putAt(C, -J3, 4,0);
-            putAt(d, 10*(-us_lim + us), 4);
+            //putAt(C, -J3, 4,0);
+           // putAt(d, 10*(-us_lim + us), 4);
 
-            //solve_qp::solveQPi(J1, e1, C, d, v);
+            solve_qp::solveQPi(J1, e1, C, d, v);
             //v = J1.pseudoInverse() * e1;
 
             cout << "v: " << v.t() << endl;
 
             robot.setVelocity(v);
+
         }
+        //robot.loop();
         ros::spinOnce();
         loop.sleep();
+
     }
 
 }
