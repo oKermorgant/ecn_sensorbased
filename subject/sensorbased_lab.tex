@@ -23,11 +23,12 @@ The goal is this lab is to control a mobile robot equipped with a pan-tilt camer
 \end{figure}
 
 The robot is simulated with V-REP\footnote{Virtual robot experimentation platform, http://www.coppeliarobotics.com/}.
-In the simulation are placed a green sphere and a target. The goal of the robot is to move to the target position while maintaining visibility on the sphere.
+In the simulation are placed a green sphere and a target. The goal of the robot is to move to the target position while maintaining visibility on the sphere. The robot also have US sensors
+to detect obstacles but they are not used in this lab.
 The robot control will be performed in C++ and will rely on:
 
 \begin{itemize}
- \item The ROS framework to handle communication between the simulator and the control program.
+ \item The ROS framework to handle communication between the simulator and the control program (actually hidden inside the robot class).
  \item The ViSP library\footnote{Visual Servoing Platform, http://visp.inria.fr} to manipulate vectors and matrices and to perform linear algebra.
 \end{itemize}
 The actual classes that are used are detailed in Appendix \ref{sec:classes}.\\
