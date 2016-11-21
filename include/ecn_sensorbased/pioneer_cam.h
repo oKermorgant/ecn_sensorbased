@@ -20,31 +20,6 @@
 #include <geometry_msgs/PoseStamped.h>
 
 
-// structure for ultrasonic sensor subscribers
-struct USSub
-{
-    void init(double &_d, int _i, ros::NodeHandle &_nh)
-    {
-        d_ = &_d;
-        std::stringstream ss;
-        ss << "/vrep/us" << _i+1;
-        i = _i;
-        //if(abs(_i-4)<2)
-            sub_ = _nh.subscribe(ss.str(), 1, &USSub::getUSDistance, this);
-        t_ = ros::Time::now().toSec();
-    }
-
-    ros::Subscriber sub_;
-    double* d_;
-    double t_;
-    int i;
-    void getUSDistance(const vrep_common::ProximitySensorDataConstPtr &msg)
-    {
-        *d_ = msg->detectedPoint.z;
-        t_ = ros::Time::now().toSec();
-    }
-};
-
 class PioneerCam
 {
 public:
@@ -58,12 +33,6 @@ public:
 
     // if the robot has received sensor data
     bool ok() {return joint_ok_ && im_ok_ && target_ok_;}
-
-    // activate velocity limits
-    inline void activateVelocityLimits() {vel_lim_ = true;}
-
-    // activate joint limits
-    inline void activateJointLimits() {joint_lim_ = true;}
 
     // get target pose in robot frame
     geometry_msgs::Pose2D getTargetRelativePose() {return target_pose_;}
@@ -92,9 +61,6 @@ public:
     // get Jacobian of camera wrt joint velocities
     vpMatrix getCamJacobian(const vpColVector &_q);
     inline vpMatrix getCamJacobian() {return getCamJacobian(q_);}
-
-    // get the current measurement and Jacobians of US sensors
-    void getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J);
 
 protected:
 
@@ -129,12 +95,6 @@ protected:
     // init subs
     bool joint_ok_, us_ok_, im_ok_, target_ok_;
 
-    // handle for all US subscriptions
-    std::vector<USSub> us_subs_;
-    // ultrasound sensor values
-    vpColVector s_us_;
-    // ultrasound sensor poses
-    std::vector<geometry_msgs::Pose2D> us_poses_;
     // image point
     vpColVector s_im_;
     cv::Point2d pd_;

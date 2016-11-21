@@ -24,6 +24,7 @@ void putAt(vpMatrix &_J, const vpMatrix &_Jsub, const unsigned int r, const unsi
     Js = _Jsub;
 }
 
+// put a vector inside another
 void putAt(vpColVector &_e, const vpColVector &_esub, const unsigned int r)
 {
     vpSubColVector es(_e, r, _esub.getRows());

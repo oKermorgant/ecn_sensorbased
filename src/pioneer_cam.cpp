@@ -11,11 +11,6 @@ using namespace std;
 
 PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh), dt_(0.1), rate_(1/dt_)
 {
-    // rate
-    //dt_ = 0.01;
-   // ros::Rate rate(1/dt_);
-   // rate_ = rate;
-
     // restart simulation
     ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosStartSimulation>("/vrep/simRosStartSimulation");
     client.waitForExistence();
@@ -50,40 +45,6 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh), dt_(0.1), rate_(1/dt_)
     // camera calibration
     cam_.initFromFov(640,480,vpMath::rad(60), vpMath::rad(60.*480/640));
 
-    // US sensors subscribers, pose, Jacobian, etc.
-    s_us_.resize(16);
-    s_us_ = 1;
-    us_subs_.resize(16);
-    us_jac_.resize(16);
-    us_poses_.resize(16);
-    double x, y, c, s;
-    for(unsigned int i=0;i<16;++i)
-    {
-        std::stringstream ss;
-        ss << "/sensors/us" << i+1;
-
-        // sensor pose to Jacobian
-        while(!ros::param::has(ss.str()))
-            sleep(1);
-        ros::param::get(ss.str() + "/x", us_poses_[i].x);
-        ros::param::get(ss.str() + "/y", us_poses_[i].y);
-        ros::param::get(ss.str() + "/theta", us_poses_[i].theta);
-        us_subs_[i].init(s_us_[i], i+1, _nh);
-
-        // Jacobian of sensor position wrt robot (v,w,pan,tilt)
-        us_jac_[i].resize(3,4);
-        x = us_poses_[i].x;
-        y = us_poses_[i].y;
-        c = cos(us_poses_[i].theta);
-        s = sin(us_poses_[i].theta);
-        us_jac_[i][0][0] = c;
-        us_jac_[i][0][1] = x*s - y*c;
-        us_jac_[i][1][0] = -s;
-        us_jac_[i][1][1] = x*c - y*s;
-        us_jac_[i][2][0] = 0;
-        us_jac_[i][2][1] = 1;
-    }
-
     // joints subscriber
     joint_ok_ = false;
     joint_sub_ = _nh.subscribe("/vrep/joint_states", 1, &PioneerCam::readJointState, this);
@@ -105,86 +66,6 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh), dt_(0.1), rate_(1/dt_)
 }
 
 
-void PioneerCam::getUSMeasureAndJacobian(vpColVector &_s, vpMatrix &_J)
-{
-    _J.resize(16,4);
-    // update measurements from timestamp
-    const double t = ros::Time::now().toSec();
-    for(unsigned int i=0;i<16;++i)
-        if(t - us_subs_[i].t_ > 0.5)
-            s_us_[i] = 1;
-    _s = s_us_;
-
-    // for all sensors, get previous and next point in this frame
-    // then compute the lines describing the shape around here
-    double xp,yp,xn,yn,d,c,s,a,b;
-    vpMatrix Y(2,2);vpColVector X(2),AB;
-    vpMatrix dDdX(1,3);
-    vpSubMatrix Ji;
-    geometry_msgs::Pose2D p, p2;
-    for(unsigned int i=0;i<16;++i)
-    {
-        dDdX = 0;
-        if(s_us_[i] != 1)
-        {
-            p = us_poses_[i];
-            c = cos(p.theta);
-            s = sin(p.theta);
-
-            p2 = us_poses_[(i+1)%16];
-            d = s_us_[(i+1)%16];
-            xn = d*cos(p.theta - p2.theta) - p.x*c + p2.x*c - p.y*s + p2.y*s;
-            yn = -d*sin(p.theta - p2.theta) + p.x*s - p2.x*s - p.y*c + p2.y*c;
-
-            p2 = us_poses_[(i-1)%16];
-            d = s_us_[(i-1)%16];
-            xp = d*cos(p.theta - p2.theta) - p.x*c + p2.x*c - p.y*s + p2.y*s;
-            yp = -d*sin(p.theta - p2.theta) + p.x*s - p2.x*s - p.y*c + p2.y*c;
-
-            cout << "us #" << i+1 << ": d = " << s_us_[i] << ", pp = (" << xp  << ", " << yp << "), pn = (" << xn << ", " << yn << ")";
-
-            // local derivative
-            dDdX[0][0] = -1;
-            // get corresponding line
-            d = s_us_[i];
-            a = 0.5*((xn-d)/yn + (xp-d)/yp);
-           // cout << " -> a = " << a << endl;
-            dDdX[0][1] = a;
-            dDdX[0][2] = -a*d;
-
-            //us_jacobian_[i][1] = p.x*cos(p.theta)-p.y*sin(p.theta) + s_us_[i]*a;             // ds/dw
-            //cout << " -> slope = " << a << endl;
-            //dx/dtheta = (-b*tan(t) + sqrt(-4*a*d*tan(t)**2 + b**2*tan(t)**2 - 2*b*tan(t) (t)**2)
-
-            // get parabol
-            Y[0][0] = yn*yn;
-            Y[0][1] = yn;
-            Y[1][0] = yp*yp;
-            Y[1][1] = yp;
-            X[0] = xn-d;
-            X[1] = xp-d;
-            AB = Y.inverseByQR() * X;
-            a = AB[0];
-            b = AB[1];
-            dDdX[0][1] = -b;
-
-            // test
-            //cout << "pn: " << a*yn*yn + b*yn + d - xn << endl;
-            //cout << "pp: " << a*yp*yp + b*yp + d - xp << endl;
-
-
-
-            //us_jacobian_[i][1] = p.x*cos(p.theta)-p.y*sin(p.theta);             // ds/dw
-        }
-
-        Ji.init(_J, i, 0, 1, 4);
-        Ji = dDdX * us_jac_[i];
-
-
-    }
-}
-
-
 void PioneerCam::setVelocity(const vpColVector &v)
 {
     if(v.size() != 4)
@@ -201,20 +82,16 @@ void PioneerCam::setVelocity(const vpColVector &v)
         a = 1;
 
     // scale wheel velocities if activated
-    if(vel_lim_)
-    {
-        if(vpMath::abs(joint_setpoint_.values.data[0])/w_max_ > 1)
-            cout << "*** Left wheel velocity above limit ***" << endl;
-        if(vpMath::abs(joint_setpoint_.values.data[1])/w_max_ > 1)
-            cout << "*** Right wheel velocity above limit ***" << endl;
-    }
-    else
-        a = 1;
+    if(vpMath::abs(joint_setpoint_.values.data[0])/w_max_ > 1)
+        cout << "*** Left wheel velocity above limit (" << joint_setpoint_.values.data[0] << ") ***" << endl;
+    if(vpMath::abs(joint_setpoint_.values.data[1])/w_max_ > 1)
+        cout << "*** Right wheel velocity above limit (" << joint_setpoint_.values.data[1] << ") ***" << endl;
+
 
     joint_setpoint_.values.data[0] *= 1./a;
     joint_setpoint_.values.data[1] *= 1./a;
 
-    // copy camera joints
+    // copy camera joints velocity
     joint_setpoint_.values.data[2] = v[2];
     joint_setpoint_.values.data[3] = v[3];
 
@@ -224,6 +101,7 @@ void PioneerCam::setVelocity(const vpColVector &v)
 
 vpMatrix PioneerCam::getCamJacobian(const vpColVector &_q)
 {
+    // autogenerated from pioneer.urdf
     vpMatrix J(6,4);
     const double c1 = cos(_q[0]);
     const double c2 = cos(_q[1]);
@@ -284,23 +162,26 @@ void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
     {
         cv::Mat img;
         cv::cvtColor(im, img, cv::COLOR_BGR2HSV);
+
+        // segment for green detection
         cv::inRange(img, cv::Scalar(55,0,0), cv::Scalar(65,255,255), img);
+
+        // edge detection
         cv::Canny(img, img, 20, 150);
+
         vector<vector<cv::Point> > contours;
         vector<cv::Vec4i> hierarchy;
         cv::findContours( img, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
+
+        // sort contours from largest to smallest
         std::sort(contours.begin(), contours.end(),
                   [](const vector<cv::Point> &c1, const vector<cv::Point> &c2)
         {return cv::contourArea(c1) > cv::contourArea(c2);});
 
+        // show largest contour in red
         if(contours.size() > 0)
         {
             cv::Moments m = cv::moments(contours[0], false);
-
-            // get it form the actual simulation
-            // s_im_[0] = m.m10/m.m00;
-            // s_im_[1] = m.m01/m.m00;
-            //s_im_[2] = m.m00;
             cv::drawContours(im, contours, 0, cv::Scalar(0,0,255), 2);
         }
     }

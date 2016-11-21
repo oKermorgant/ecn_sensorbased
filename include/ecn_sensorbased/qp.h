@@ -151,7 +151,7 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
             ineqMax = 0;
             if(nAct)
             {
-                ApC.init(Ap, nA, 0, n, nAct);
+                ApC.init(Ap, 0 ,nA, n, nAct);
                 l = -ApC.transpose() * _Q.transpose() * e;
 
                 ineqCount = 0;
