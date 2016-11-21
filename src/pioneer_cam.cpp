@@ -52,7 +52,7 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     // image transport
     im_ok_ = false;
     s_im_.resize(2);
-    cv::startWindowThread();
+    //cv::startWindowThread();
     im_sub_ = it_.subscribe("/vrep/image", 1, &PioneerCam::readImage, this);
     std::cout << "Pioneer init ok" << std::endl;
     sphere_sub_ = _nh.subscribe("/vrep/sphere", 1, &PioneerCam::readSpherePose, this);

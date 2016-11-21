@@ -31,6 +31,11 @@ public:
     // if the robot has received sensor data
     bool ok() {return joint_ok_ && im_ok_ && target_ok_;}
 
+    // getters
+    double radius() {return radius_;}
+    double base() {return base_;}
+    double wmax() {return w_max_;}
+
     // get target pose in robot frame
     geometry_msgs::Pose2D getTargetRelativePose() {return target_pose_;}
 
