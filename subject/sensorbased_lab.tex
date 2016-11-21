@@ -100,12 +100,44 @@ The \texttt{check\_vitals} is a script that checks the control node is running a
 
 \subsection{The PioneerCam robot}
 
-The simulated robot is a Pioneer P3dx. A pan-tilt camera is placed at the front of the robot. The robot is controlled 
+The simulated robot is a Pioneer P3dx. A pan-tilt camera is placed at the front of the robot. The robot is controlled in joint velocity with $\dot \q = (v, \omega, \dot q_p, \dot q_t)$, where $(v,\omega)$ are the linear and angular velocity
+of the mobile base considered as a unicycle, and $(q_p, q_t)$ are the pan and tilt joint angles. In the initial state of the control node, the visibility is not taken into account and the robot follows a very simple control law:
+\begin{equation}\label{raw}
+ \left\{\begin{array}{ll}
+         v &= \lambda_v(x-d) \\ \omega &= \lambda_{\omega}\text{atan2}(y, x)
+        \end{array}\right.
+\end{equation}where $(x,y)$ is the coordinate of the target in the robot frame, $d$ is the final distance to the target (set to 0.1 m), and $(\lambda_v, \lambda_{\omega})$ are the control gains.\\
+
+You should verify that this control runs fine, even if it raises several problems:
+\begin{itemize}
+ \item The robot wheels have limited velocities, which is not taken into account with the current control law
+ \item The sphere visibility is not ensured
+\end{itemize}
+
+
+
+\section{Expected work}
+
+The goal is to modify the control law in order to take into account the maximum velocity of the wheels, and the visibility constraint.
+
+\begin{enumerate}
+ \item The wheel kinematic model can be written as:
+\begin{equation}
+  \left\{\begin{array}{ll}
+         v &= \frac{r}{2}(\omega_l + \omega_r) \\ \omega &= \frac{r}{2b}(\omega_r - \omega_l)
+        \end{array}\right.
+\end{equation}where $r$ is the wheel radius, $b$ is the distance between the wheels and $(\omega_l, \omega_r)$ are the left and right wheel velocities.
+The velocity limit applies to $\omega_l$ and $\omega_r$, not on $(v,\omega)$.
+\item The visibility constraint can be taken into account from the current position of the sphere and its Jacobian (see Appendix \ref{pioneer} for how to get them).
+\item Finally, we would like to have a motion that follows the basic one from \eqref{raw}. Do to so, a constraint on the ratio between $v$ and $\omega$ should be added so that the resulting robot motion 
+is proportional to the desired one.
+\end{enumerate}
+
 
 
 \appendix
 
-\section{Main classes}\label{sec:classes}
+\section{Main classes and tools}\label{sec:classes}
 
 \subsection{ViSP classes}
 
@@ -115,38 +147,19 @@ The main classes from ViSP (at least in this lab) are:
 \begin{itemize}
 \item \texttt{vpMatrix} represents a classical matrix, can then be transposed, inversed (or pseudo-inversed), multiplied with a vector, etc.
 \item \texttt{vpColVector} is a column vector with classical mathematical properties.
-
- \subsection{The PioneerCam class}
- 
- The \texttt{VVS} class implements the minimization algorithm. It is instanciated with:
- \begin{center}\cppstyle
-\begin{lstlisting}
-        VVS vvs(cam, d, r, c);
-\end{lstlisting}
-\end{center}where cam is the camera model that is used (PerspectiveCamera or DistortionCamera), d is the inter-point distances of the real landmark, and r and c are the number of rows and columns. The VVS uses these values to initialize the true position of the 3D points.
-
-Only two methods are to be modified:
-\begin{itemize}
-    \item \texttt{void calibrate(std::vector<Pattern> \&\_pat)} (already quite written)\\ solves the calibration problem from a given set of \texttt{Pattern}. 
-    \item \texttt{void computePose(Pattern \&\_pat, vpHomogeneousMatrix \&\_M, const bool \&\_reset)} \\ 
-    solves the pose computation problem from a single \texttt{Pattern} (one image with extracted points).\\ This method can be highly inspired from the calibrate method, as shown in Section \ref{sec:pose}.
 \end{itemize}
 
-This class also have useful attributes:
+\subsection{The PioneerCam class}
+\label{pioneer}
+The PioneerCam class hides all the ROS communication aspects in order to have a higher-level access. As this is not a lab on robot modeling, all Jacobians are already 
+available - even if it could be a nice exercice to compute the camera Jacobian. 
+
+The main methods of the \texttt{PioneerCam} class are:
+
 \begin{itemize}
- \item \texttt{std::vector<vpPoint> X\_}: a vector of the true 3D position of the points, and is to be used in the reprojection error
- \item \texttt{GenericCamera* cam\_}: the camera that we are using or calibrating, it is a pointer to the methods can be called by using an arrow
+ \item \texttt{setVelocity(vpColVector)}: sends a $(v, \omega, \dot q_p, \dot q_t)$ velocity to the robot, wheels velocity limits will be ensured
+ \item \texttt{getImagePoint}: gives the current position of the sphere in the image
 \end{itemize}
-As a syntax example, here is how we compute the (u,v) pixel coordinates of point k assuming a transformation matrix M (which can be quite useful for reprojection error):
- \begin{center}\cppstyle
-\begin{lstlisting}
-double u,v;
-X_[k].track(M);		     // X_[k] is computed in the camera frame
-cam_->project(X_[k], u, v);  // u and v are now the pixel coord. for the current camera model
-\end{lstlisting}
-\end{center}
-
-
 
 
 \end{document}

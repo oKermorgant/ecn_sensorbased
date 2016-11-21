@@ -25,9 +25,6 @@ class PioneerCam
 public:
     PioneerCam(ros::NodeHandle &_nh);
 
-    // sampling time loop
-    inline void loop() {ros::spinOnce(); rate_.sleep();}
-
     // send a velocity to the joints
     void setVelocity(const vpColVector &v);
 
@@ -63,15 +60,9 @@ public:
     inline vpMatrix getCamJacobian() {return getCamJacobian(q_);}
 
 protected:
-
-    // sampling time
-    ros::Rate rate_;
-    double dt_;
-
     // robot model
     // wheels
     double radius_, base_, w_max_;
-    bool vel_lim_, joint_lim_;
     // US sensors Jacobians
     std::vector<vpMatrix> us_jac_;
     // camera position offset

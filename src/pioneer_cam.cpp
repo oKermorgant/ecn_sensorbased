@@ -9,7 +9,7 @@
 using namespace std;
 
 
-PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh), dt_(0.1), rate_(1/dt_)
+PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 {
     // restart simulation
     ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosStartSimulation>("/vrep/simRosStartSimulation");
@@ -19,7 +19,6 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh), dt_(0.1), rate_(1/dt_)
 
     // joint setpoint publisher
     joint_pub_  =_nh.advertise<vrep_common::JointSetStateData>("/vrep/joint_setpoint", 1);
-    joint_lim_ = false;
     // get V-REP joint handles
     client = _nh.serviceClient<vrep_common::simRosGetObjectHandle>("/vrep/simRosGetObjectHandle");
     client.waitForExistence();
@@ -40,7 +39,6 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh), dt_(0.1), rate_(1/dt_)
     radius_ = .0975;
     base_ = .331;
     w_max_ = 4;
-    vel_lim_ = false;
 
     // camera calibration
     cam_.initFromFov(640,480,vpMath::rad(60), vpMath::rad(60.*480/640));
