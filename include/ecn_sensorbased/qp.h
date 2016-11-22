@@ -108,9 +108,23 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
         // solve with projection if any constraint matrix
         if(_A.getRows())
         {
+            // print what we solve
+          /*  cout << "A " << endl << _A <<endl;
+            cout << "b " << endl << _b.t() <<endl;
+            cout << "Q " << endl << _Q <<endl;
+            cout << "r " << endl << _r.t() <<endl;
+            cout << "C " << endl << _C <<endl;
+            cout << "d " << endl << _d.t() <<endl;*/
+
             Ap = _A.pseudoInverse();
             x = Ap * _b;
             P = In - Ap * _A;
+            // check values of P
+            for(i=0;i<n;++i)
+                for(j=0;j<n;++j)
+                    if(P[i][j] < 1e-6)
+                        P[i][j] = 0;
+          //  cout << "P" << endl << P << endl;
             x += P*(_Q*P).pseudoInverse() * (_r - _Q*x);
         }
         else
@@ -122,10 +136,11 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
         ineqMax = 0;
         for ( i=0;i<nC;++i )
         {
-            if ( _C.getRow ( i ) * x - _d[i] > ineqMax + 1e-6 )
+            if ( !active[i] &&  _C.getRow ( i ) * x - _d[i] > ineqMax + 1e-6 )
             {
                 ineqMax = _C.getRow ( i ) * x - _d[i];
                 ineqInd = i;
+                //cout << "ineqMax for " << i << ": " << ineqMax << endl;
             }
         }
 
@@ -133,7 +148,7 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
         {
             nAct++;
             active[ineqInd] = true;
-            // cout << "activating ineq: " << ineqInd << endl;
+            //cout << "activating inequality # " << ineqInd << endl;
         }
         else						// all inequalities ensured, ineqMax==0
         {
@@ -151,7 +166,7 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
             ineqMax = 0;
             if(nAct)
             {
-                ApC.init(Ap, 0 ,nA, n, nAct);
+                ApC.init(Ap, 0, nA, n, nAct);
                 l = -ApC.transpose() * _Q.transpose() * e;
 
                 ineqCount = 0;
@@ -172,7 +187,7 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
             {
                 active[ineqInd] = false;
                 nAct--;
-                //  cout << "deactivating ineq: " << ineqInd << endl;
+                //cout << "deactivating inequality # " << ineqInd << endl;
             }
             else	// no useless equality, this has to be the optimal solution
                 break;
@@ -181,19 +196,19 @@ void solveQP ( const vpMatrix &_Q, const vpColVector &_r, vpMatrix _A, vpColVect
         // before looping again, check whether the new active set candidate has already been tested or not
         ineqInd = 0;
         ineqCount = 0;
-        for ( i=0;i<activePast.size() && ineqCount != nC;++i )
+        for ( auto const &prev: activePast)
         {
             ineqCount = 0;
             for ( j=0;j<nC;++j )
             {
-                if ( activePast[i][j] == active[j] )
+                if ( prev[j] == active[j] )
                     ineqCount++;
             }
+            // if nC same values: new active set has already been tested, we're beginning a cycle
+            // leave the loop
+            if ( ineqCount == nC )
+                return;
         }
-        // if nC same values: new active set has already been tested, we're beginning a cycle
-        // leave the loop
-        if ( ineqCount == nC )
-            break;
     }
     active = activeBest;
 }
