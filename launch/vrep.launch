@@ -4,11 +4,9 @@
     <!-- Launch V-REP with Pioneer world -->
     <include file="$(find vrep_plugin)/vrep.launch">
         <arg name="scene" value="$(find ecn_sensorbased)/scenes/pioneer.ttt"/>
+        <arg name="topic" value="/vrep/joint_setpoint"/>        
     </include>
     
     <!-- Load parameters for US sensor positions -->
-    <rosparam file="$(find ecn_sensorbased)/launch/us_config.yaml" command="load" ns="sensors"/>
-    
-    <!-- small script to check if control node is running -->
-    <node name="check_vitals" pkg="ecn_sensorbased" type="check_vitals.py" output="screen" respawn="true"/>
+    <rosparam file="$(find ecn_sensorbased)/launch/us_config.yaml" command="load" ns="sensors"/>    
 </launch>
