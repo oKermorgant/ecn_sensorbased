@@ -7,7 +7,7 @@
   <maintainer email="olivier.kermorgant@ec-nantes.fr">Olivier Kermorgant</maintainer>
 
 
-  <license>BSD</license>
+  <license>MIT</license>
 
 
   <buildtool_depend>catkin</buildtool_depend>
