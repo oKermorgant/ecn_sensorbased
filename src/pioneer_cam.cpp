@@ -11,16 +11,10 @@ using namespace std;
 
 PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 {
-    // restart simulation
-    ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosStartSimulation>("/vrep/simRosStartSimulation");
-    client.waitForExistence();
-    vrep_common::simRosStartSimulation srv_start;
-    client.call(srv_start);
-
     // joint setpoint publisher
     joint_pub_  =_nh.advertise<vrep_common::JointSetStateData>("/vrep/joint_setpoint", 1);
     // get V-REP joint handles
-    client = _nh.serviceClient<vrep_common::simRosGetObjectHandle>("/vrep/simRosGetObjectHandle");
+    ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosGetObjectHandle>("/vrep/simRosGetObjectHandle");
     client.waitForExistence();
     vrep_common::simRosGetObjectHandle srv;
     for(auto joint: {"Pioneer_p3dx_leftMotor", "Pioneer_p3dx_rightMotor", "camera_pan", "camera_tilt"})
