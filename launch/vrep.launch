@@ -2,9 +2,8 @@
 <launch>
 
     <!-- Launch V-REP with Pioneer world -->
-    <include file="$(find vrep_plugin)/vrep.launch">
+    <include file="$(find vrep_ros_interface)/vrep.launch">
         <arg name="scene" value="$(find ecn_sensorbased)/scenes/pioneer.ttt"/>
-        <arg name="topic" value="/vrep/joint_setpoint"/>        
     </include>
     
     <!-- Load parameters for US sensor positions -->

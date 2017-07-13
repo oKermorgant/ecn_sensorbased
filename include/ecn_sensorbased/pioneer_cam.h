@@ -6,10 +6,8 @@
 #include <ros/subscriber.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <vrep_common/JointSetStateData.h>
 #include <functional>
 #include <geometry_msgs/Pose2D.h>
-#include <vrep_common/ProximitySensorData.h>
 #include <sstream>
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>

@@ -1,7 +1,4 @@
 #include <ecn_sensorbased/pioneer_cam.h>
-#include <vrep_common/simRosGetObjectHandle.h>
-#include <vrep_common/simRosSetObjectPose.h>
-#include <vrep_common/simRosStartSimulation.h>
 #include <visp/vpCameraParameters.h>
 #include <visp/vpPixelMeterConversion.h>
 #include <algorithm>
@@ -12,22 +9,7 @@ using namespace std;
 PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 {
     // joint setpoint publisher
-    joint_pub_  =_nh.advertise<vrep_common::JointSetStateData>("/vrep/joint_setpoint", 1);
-    // get V-REP joint handles
-    ros::ServiceClient client = _nh.serviceClient<vrep_common::simRosGetObjectHandle>("/vrep/simRosGetObjectHandle");
-    client.waitForExistence();
-    vrep_common::simRosGetObjectHandle srv;
-    for(auto joint: {"Pioneer_p3dx_leftMotor", "Pioneer_p3dx_rightMotor", "camera_pan", "camera_tilt"})
-    {
-        srv.request.objectName = joint;
-        if(client.call(srv))
-        {
-            std::cout << "Handle for " << joint << ": " << srv.response.handle << std::endl;
-            joint_setpoint_.handles.data.push_back(srv.response.handle);
-            joint_setpoint_.setModes.data.push_back(2);
-            joint_setpoint_.values.data.push_back(0);
-        }
-    }
+    joint_pub_  =_nh.advertise<sensor_msgs::JointState>("/joint_setpoint", 1);
 
     // wheels
     radius_ = .0975;
@@ -39,7 +21,7 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 
     // joints subscriber
     joint_ok_ = false;
-    joint_sub_ = _nh.subscribe("/vrep/joint_states", 1, &PioneerCam::readJointState, this);
+    joint_sub_ = _nh.subscribe("/joint_states", 1, &PioneerCam::readJointState, this);
     joint_names_ = {"camera_pan", "camera_tilt"};
     q_.resize(joint_names_.size());
 
@@ -47,13 +29,13 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     im_ok_ = false;
     s_im_.resize(2);
     //cv::startWindowThread();
-    im_sub_ = it_.subscribe("/vrep/image", 1, &PioneerCam::readImage, this);
+    im_sub_ = it_.subscribe("/image", 1, &PioneerCam::readImage, this);
     std::cout << "Pioneer init ok" << std::endl;
-    sphere_sub_ = _nh.subscribe("/vrep/sphere", 1, &PioneerCam::readSpherePose, this);
+    sphere_sub_ = _nh.subscribe("/sphere", 1, &PioneerCam::readSpherePose, this);
 
     // pose
     target_ok_ = false;
-    target_sub_ = _nh.subscribe("/vrep/target", 1, &PioneerCam::readTargetPose, this);
+    target_sub_ = _nh.subscribe("/target", 1, &PioneerCam::readTargetPose, this);
 
 }
 
