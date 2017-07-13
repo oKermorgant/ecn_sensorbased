@@ -10,6 +10,8 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 {
     // joint setpoint publisher
     joint_pub_  =_nh.advertise<sensor_msgs::JointState>("/joint_setpoint", 1);
+    joint_setpoint_.name = {"Pioneer_p3dx_leftMotor", "Pioneer_p3dx_rightMotor", "camera_pan", "camera_tilt"};
+    joint_setpoint_.velocity.resize(4);
 
     // wheels
     radius_ = .0975;
@@ -24,6 +26,7 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     joint_sub_ = _nh.subscribe("/joint_states", 1, &PioneerCam::readJointState, this);
     joint_names_ = {"camera_pan", "camera_tilt"};
     q_.resize(joint_names_.size());
+
 
     // image transport
     im_ok_ = false;
@@ -49,25 +52,25 @@ void PioneerCam::setVelocity(const vpColVector &v)
     }
 
     // change (v,w) to left and right wheel velocities
-    joint_setpoint_.values.data[0] = (v[0]-base_*v[1])/radius_;
-    joint_setpoint_.values.data[1] = (v[0]+base_*v[1])/radius_;
-    double a = std::max(vpMath::abs(joint_setpoint_.values.data[0])/w_max_, vpMath::abs(joint_setpoint_.values.data[1])/w_max_);
+    joint_setpoint_.velocity[0] = (v[0]-base_*v[1])/radius_;
+    joint_setpoint_.velocity[1] = (v[0]+base_*v[1])/radius_;
+    double a = std::max(vpMath::abs(joint_setpoint_.velocity[0])/w_max_, vpMath::abs(joint_setpoint_.velocity[1])/w_max_);
     if(a<1)
         a = 1;
 
     // scale wheel velocities if activated
-    if(vpMath::abs(joint_setpoint_.values.data[0])/w_max_ > 1)
-        cout << "*** Left wheel velocity above limit (" << joint_setpoint_.values.data[0] << ") ***" << endl;
-    if(vpMath::abs(joint_setpoint_.values.data[1])/w_max_ > 1)
-        cout << "*** Right wheel velocity above limit (" << joint_setpoint_.values.data[1] << ") ***" << endl;
+    if(vpMath::abs(joint_setpoint_.velocity[0])/w_max_ > 1)
+        cout << "*** Left wheel velocity above limit (" << joint_setpoint_.velocity[0] << ") ***" << endl;
+    if(vpMath::abs(joint_setpoint_.velocity[1])/w_max_ > 1)
+        cout << "*** Right wheel velocity above limit (" << joint_setpoint_.velocity[1] << ") ***" << endl;
 
 
-    joint_setpoint_.values.data[0] *= 1./a;
-    joint_setpoint_.values.data[1] *= 1./a;
+    joint_setpoint_.velocity[0] *= 1./a;
+    joint_setpoint_.velocity[1] *= 1./a;
 
     // copy camera joints velocity
-    joint_setpoint_.values.data[2] = v[2];
-    joint_setpoint_.values.data[3] = v[3];
+    joint_setpoint_.velocity[2] = v[2];
+    joint_setpoint_.velocity[3] = v[3];
 
     joint_pub_.publish(joint_setpoint_);
 }
@@ -168,17 +171,17 @@ void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
 }
 
 
-void PioneerCam::readTargetPose(const geometry_msgs::PoseStampedConstPtr &msg)
+void PioneerCam::readTargetPose(const geometry_msgs::PoseConstPtr &msg)
 {
     target_ok_ = true;
-    target_pose_.x = msg->pose.position.x;
-    target_pose_.y = msg->pose.position.y;
-    target_pose_.theta = 2*atan2(msg->pose.orientation.z, msg->pose.orientation.w);
+    target_pose_.x = msg->position.x;
+    target_pose_.y = msg->position.y;
+    target_pose_.theta = 2*atan2(msg->orientation.z, msg->orientation.w);
 }
 
-void PioneerCam::readSpherePose(const geometry_msgs::PoseStampedConstPtr &msg)
+void PioneerCam::readSpherePose(const geometry_msgs::PoseConstPtr &msg)
 {
     im_ok_ = true;
-    s_im_[0] = -msg->pose.position.x/msg->pose.position.z;
-    s_im_[1] = -msg->pose.position.y/msg->pose.position.z;
+    s_im_[0] = msg->position.x/msg->position.z;
+    s_im_[1] = msg->position.y/msg->position.z;
 }

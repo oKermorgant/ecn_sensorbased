@@ -15,7 +15,8 @@
 #include <visp/vpCameraParameters.h>
 #include <visp/vpMeterPixelConversion.h>
 #include <geometry_msgs/Pose2D.h>
-#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
+#include <sensor_msgs/JointState.h>
 
 
 class PioneerCam
@@ -27,7 +28,12 @@ public:
     void setVelocity(const vpColVector &v);
 
     // if the robot has received sensor data
-    bool ok() {return joint_ok_ && im_ok_ && target_ok_;}
+    bool ok() {
+        if(!(joint_ok_ && im_ok_ && target_ok_))
+            std::cout << "Waiting for incoming messages... did you start the simulation?\n";
+        return joint_ok_ && im_ok_ && target_ok_;
+
+    }
 
     // getters
     double radius() {return radius_;}
@@ -79,7 +85,7 @@ protected:
     // joint velocity publisher
     ros::Publisher joint_pub_;
     // joint velocity message
-    vrep_common::JointSetStateData joint_setpoint_;
+    sensor_msgs::JointState joint_setpoint_;
     // image message
     image_transport::ImageTransport it_;
     image_transport::Subscriber im_sub_;
@@ -96,9 +102,8 @@ protected:
     // callbacks
     void readJointState(const sensor_msgs::JointStateConstPtr &_msg);
     void readImage(const sensor_msgs::ImageConstPtr& msg);
-    void readPose(const geometry_msgs::PoseStampedConstPtr &msg);
-    void readTargetPose(const geometry_msgs::PoseStampedConstPtr &msg);
-    void readSpherePose(const geometry_msgs::PoseStampedConstPtr &msg);
+    void readTargetPose(const geometry_msgs::PoseConstPtr &msg);
+    void readSpherePose(const geometry_msgs::PoseConstPtr &msg);
 
 
 };
