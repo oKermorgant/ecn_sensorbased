@@ -143,23 +143,22 @@ void PioneerCam::readImage(const sensor_msgs::ImageConstPtr& msg)
         // segment for green detection
         cv::inRange(img, cv::Scalar(55,0,0), cv::Scalar(65,255,255), img);
 
-        // edge detection
-        cv::Canny(img, img, 20, 150);
-
         vector<vector<cv::Point> > contours;
         vector<cv::Vec4i> hierarchy;
         cv::findContours( img, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
 
-        // sort contours from largest to smallest
-        std::sort(contours.begin(), contours.end(),
-                  [](const vector<cv::Point> &c1, const vector<cv::Point> &c2)
-        {return cv::contourArea(c1) > cv::contourArea(c2);});
 
-        // show largest contour in red
-        if(contours.size() > 0)
+        if(contours.size())
         {
-            cv::Moments m = cv::moments(contours[0], false);
-            cv::drawContours(im, contours, 0, cv::Scalar(0,0,255), 2);
+            // get largest contour
+            auto largest = std::max_element(
+                           contours.begin(), contours.end(),
+                           [](const vector<cv::Point> &c1, const vector<cv::Point> &c2)
+                           {return cv::contourArea(c1) < cv::contourArea(c2);});
+            int idx = std::distance(contours.begin(), largest);
+            // show it in red
+            cv::Moments m = cv::moments(contours[idx], false);
+            cv::drawContours(im, contours, idx, cv::Scalar(0,0,255), 2);
         }
     }
     catch (...)
