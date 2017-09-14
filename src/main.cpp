@@ -1,14 +1,12 @@
 #include <ecn_sensorbased/pioneer_cam.h>
 #include <visp/vpFeaturePoint.h>
-#include <ecn_sensorbased/utils.h>
-#include <ecn_sensorbased/qp.h>
+#include <ecn_common/optim.h>
 
 using namespace std;
 
 
 int main(int argc, char** argv)
 {
-
     ros::init(argc, argv, "control_node");
     ros::NodeHandle nh;
 

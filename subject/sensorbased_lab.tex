@@ -50,6 +50,13 @@ This lab is available on GitHub as a ROS package called \texttt{ecn\_sensorbased
  git clone https://github.com/oKermorgant/ecn_sensorbased.git
 \end{lstlisting}
 \end{center}
+There is a dependency on another package:
+\begin{center}\cppstyle
+\begin{lstlisting}
+ git clone https://github.com/oKermorgant/ecn_common.git
+\end{lstlisting}
+\end{center}
+Remember to call {\tt{catkin build}} after downloading the packages in your ROS workspace.
 
 \subsection{Structure of the \texttt{ecn\_sensorbased} ROS package}
 
@@ -199,9 +206,9 @@ Three functions are related to QP solvers, assuming the following formulation:
 \end{equation}
 
 \begin{itemize}
- \item \texttt{solve\_qp::solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
- \item  \texttt{solve\_qp::solveQPe ( Q, r, A, b, x)} with only equality constraints
- \item  \texttt{solve\_qp::solveQPi ( Q, r, C, d, x)} with only inequality constraints
+ \item \texttt{ecn::solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
+ \item  \texttt{ecn::solveQPe ( Q, r, A, b, x)} with only equality constraints
+ \item  \texttt{ecn::solveQPi ( Q, r, C, d, x)} with only inequality constraints
 \end{itemize}
 
 
@@ -209,10 +216,10 @@ Three functions are related to QP solvers, assuming the following formulation:
 
 In addition to the given classes and solvers, several utility function are defined:
 \begin{itemize}
- \item \texttt{void putAt(M, Ms, r, c)}: Writes matrix Ms inside matrix M, starting from given row and column.
- \item \texttt{void putAt(V, Vs, r)}: Writes column vector Vs inside vector V, starting from given row. These two functions do nothing but print an error
+ \item \texttt{void ecn::putAt(M, Ms, r, c)}: Writes matrix Ms inside matrix M, starting from given row and column.
+ \item \texttt{void ecn::putAt(V, Vs, r)}: Writes column vector Vs inside vector V, starting from given row. These two functions do nothing but print an error
  if the submatrix or vector does not fit in the main one.
- \item \texttt{double weight(s, s\_act, s\_max)}: Returns the weighting function defined during the class:
+ \item \texttt{double ecn::weight(s, s\_act, s\_max)}: Returns the weighting function defined during the lectures:
  \begin{equation*}
   h = \left\{\begin{array}{cl}
               0 & \text{if } s < s_{\text{act}} \\
@@ -220,7 +227,7 @@ In addition to the given classes and solvers, several utility function are defin
              \end{array}\right.
  \end{equation*}This function is designed for upper bounds, but can be easily used for lower bounds by sending the opposite values formulation
  $(s,s_{\text{act}}, s_{\max})$.
-\item \texttt{double weightBothSigns(s, s\_act, s\_max)}: Returns the weighting function considering both lower and upper bounds, assuming opposite bounds (
+\item \texttt{double ecn::weightBothSigns(s, s\_act, s\_max)}: Returns the weighting function considering both lower and upper bounds, assuming opposite bounds (
 which is true for the wheel velocities and the visibility).
 \end{itemize}
 

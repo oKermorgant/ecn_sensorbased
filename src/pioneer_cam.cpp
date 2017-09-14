@@ -3,6 +3,7 @@
 #include <visp/vpPixelMeterConversion.h>
 #include <algorithm>
 #include <visp/vpSubMatrix.h>
+#include <opencv2/highgui.hpp>
 using namespace std;
 
 
@@ -18,8 +19,11 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     base_ = .331;
     w_max_ = 4;
 
-    // camera calibration
-    cam_.initFromFov(640,480,vpMath::rad(60), vpMath::rad(60.*480/640));
+    // color detector & camera calibration
+    color_detector.detectColor(0,255,0);
+    color_detector.setContourDisplay(255,0,0);
+    color_detector.fitCircle();
+    color_detector.setCamera(640,480,60);
 
     // joints subscriber
     joint_ok_ = false;

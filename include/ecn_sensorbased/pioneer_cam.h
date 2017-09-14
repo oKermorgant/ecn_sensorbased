@@ -10,13 +10,12 @@
 #include <geometry_msgs/Pose2D.h>
 #include <sstream>
 #include <image_transport/image_transport.h>
-#include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <visp/vpCameraParameters.h>
-#include <visp/vpMeterPixelConversion.h>
 #include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
+#include <ecn_common/color_detector.h>
 
 
 class PioneerCam
@@ -49,18 +48,12 @@ public:
     // get the current image point
     inline void getImagePoint(vpColVector &_s) {_s = s_im_;}
 
-    // gives the desired visual features
-    void setSd(vpColVector _s)
-    {
-        vpMeterPixelConversion::convertPoint(cam_, _s[0], _s[1], pd_.x, pd_.y);
-    }
-
     // get the camera x-y visibility limits
     inline vpColVector getCamLimits()
     {
         vpColVector l(2);
-        l[0] = cam_.get_u0()*cam_.get_px_inverse();
-        l[1] = cam_.get_v0()*cam_.get_py_inverse();
+        l[0] = color_detector.xLim();
+        l[1] = color_detector.yLim();
         return l;
     }
 
@@ -72,10 +65,6 @@ protected:
     // robot model
     // wheels
     double radius_, base_, w_max_;
-    // US sensors Jacobians
-    std::vector<vpMatrix> us_jac_;
-    // camera position offset
-    vpCameraParameters cam_;
 
     // V-REP interface
     // joint subscriber
@@ -96,6 +85,7 @@ protected:
     bool joint_ok_, us_ok_, im_ok_, target_ok_;
 
     // image point
+    ecn::ColorDetector color_detector;
     vpColVector s_im_;
     cv::Point2d pd_;
 
@@ -104,8 +94,6 @@ protected:
     void readImage(const sensor_msgs::ImageConstPtr& msg);
     void readTargetPose(const geometry_msgs::PoseConstPtr &msg);
     void readSpherePose(const geometry_msgs::PoseConstPtr &msg);
-
-
 };
 
 #endif // PIONEERCAM_H

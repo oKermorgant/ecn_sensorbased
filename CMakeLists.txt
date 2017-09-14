@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   geometry_msgs
   image_transport
+  ecn_common
 )
 
 ## System dependencies are found with CMake's conventions
@@ -28,9 +29,9 @@ find_package(VISP REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include ${OpenCV_INCLUDE_DIRS}  ${VISP_INCLUDE_DIRS}
+  INCLUDE_DIRS include ${OpenCV_INCLUDE_DIRS}  ${VISP_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS}
   LIBRARIES ecn_sensorbased
-  CATKIN_DEPENDS cv_bridge roscpp sensor_msgs geometry_msgs image_transport
+  CATKIN_DEPENDS cv_bridge roscpp sensor_msgs geometry_msgs image_transport ecn_common
   DEPENDS ${OpenCV_LIBRARIES}  ${VISP_LIBRARIES}
 )
 
@@ -48,9 +49,7 @@ include_directories(
   ${VISP_INCLUDE_DIRS}
 )
 
-add_library(ecn_sensorbased include/ecn_sensorbased/pioneer_cam.h src/pioneer_cam.cpp
-    include/ecn_sensorbased/utils.h
-    include/ecn_sensorbased/qp.h)
+add_library(ecn_sensorbased include/ecn_sensorbased/pioneer_cam.h src/pioneer_cam.cpp)
 target_link_libraries(ecn_sensorbased ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${VISP_LIBRARIES})
 
 add_executable(pioneer  src/main.cpp)
