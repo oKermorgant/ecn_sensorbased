@@ -8,11 +8,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "control_node");
-    ros::NodeHandle nh;
-
-    PioneerCam robot(nh);
-
-    ros::Rate loop(10);
+    PioneerCam robot;
 
     // gains
     // pose error gain
@@ -22,30 +18,25 @@ int main(int argc, char** argv)
     int it = 0;
     vpColVector v(4);
 
-    while(ros::ok())
+    vpMatrix Q, A;
+    vpColVector r, b, x;
+    ecn::solveQPe(Q, r, A, b, x);
+
+    while(robot.ok())
     {
-        if(robot.ok())
-        {
-            it++;
-            cout << "-------------" << endl;
+        it++;
+        cout << "-------------" << endl;
 
-            // get robot and target positions to get position error
-            target = robot.getTargetRelativePose();
+        // get robot and target positions to get position error
+        target = robot.getTargetRelativePose();
 
-            // linear velocity
-            v[0] = lv*(target.x - .1);
-            // angular velocity
-            v[1] = 10*lv*(fmod(atan2(target.y, target.x)+M_PI, 2*M_PI) - M_PI);
+        // linear velocity
+        v[0] = lv*(target.x - .1);
+        // angular velocity
+        v[1] = 10*lv*(fmod(atan2(target.y, target.x)+M_PI, 2*M_PI) - M_PI);
 
-            cout << "v: " << v.t() << endl;
+        cout << "v: " << v.t() << endl;
 
-            robot.setVelocity(v);
-
-        }
-        //robot.loop();
-        ros::spinOnce();
-        loop.sleep();
-
+        robot.setVelocity(v);
     }
-
 }

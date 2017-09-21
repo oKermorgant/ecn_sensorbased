@@ -7,10 +7,10 @@
 using namespace std;
 
 
-PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
+PioneerCam::PioneerCam() : it_(nh_), loop_(10)
 {
     // joint setpoint publisher
-    joint_pub_  =_nh.advertise<sensor_msgs::JointState>("/joint_setpoint", 1);
+    joint_pub_  =nh_.advertise<sensor_msgs::JointState>("/joint_setpoint", 1);
     joint_setpoint_.name = {"Pioneer_p3dx_leftMotor", "Pioneer_p3dx_rightMotor", "camera_pan", "camera_tilt"};
     joint_setpoint_.velocity.resize(4);
 
@@ -27,7 +27,7 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
 
     // joints subscriber
     joint_ok_ = false;
-    joint_sub_ = _nh.subscribe("/joint_states", 1, &PioneerCam::readJointState, this);
+    joint_sub_ = nh_.subscribe("/joint_states", 1, &PioneerCam::readJointState, this);
     joint_names_ = {"camera_pan", "camera_tilt"};
     q_.resize(joint_names_.size());
 
@@ -38,11 +38,11 @@ PioneerCam::PioneerCam(ros::NodeHandle &_nh) : it_(_nh)
     //cv::startWindowThread();
     im_sub_ = it_.subscribe("/image", 1, &PioneerCam::readImage, this);
     std::cout << "Pioneer init ok" << std::endl;
-    sphere_sub_ = _nh.subscribe("/sphere", 1, &PioneerCam::readSpherePose, this);
+    sphere_sub_ = nh_.subscribe("/sphere", 1, &PioneerCam::readSpherePose, this);
 
     // pose
     target_ok_ = false;
-    target_sub_ = _nh.subscribe("/target", 1, &PioneerCam::readTargetPose, this);
+    target_sub_ = nh_.subscribe("/target", 1, &PioneerCam::readTargetPose, this);
 
 }
 

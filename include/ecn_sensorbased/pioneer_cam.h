@@ -21,16 +21,19 @@
 class PioneerCam
 {
 public:
-    PioneerCam(ros::NodeHandle &_nh);
+    PioneerCam();
 
     // send a velocity to the joints
     void setVelocity(const vpColVector &v);
 
     // if the robot has received sensor data
     bool ok() {
+        ros::spinOnce();
+        loop_.sleep();
+
         if(!(joint_ok_ && im_ok_ && target_ok_))
             std::cout << "Waiting for incoming messages... did you start the simulation?\n";
-        return joint_ok_ && im_ok_ && target_ok_;
+        return ros::ok() && joint_ok_ && im_ok_ && target_ok_;
 
     }
 
@@ -67,6 +70,8 @@ protected:
     double radius_, base_, w_max_;
 
     // V-REP interface
+    ros::NodeHandle nh_;
+    ros::Rate loop_;
     // joint subscriber
     ros::Subscriber joint_sub_;
     std::vector<std::string> joint_names_;
