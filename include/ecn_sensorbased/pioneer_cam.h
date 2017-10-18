@@ -33,7 +33,7 @@ public:
 
         if(!(joint_ok_ && im_ok_ && target_ok_))
             std::cout << "Waiting for incoming messages... did you start the simulation?\n";
-        return ros::ok() && joint_ok_ && im_ok_ && target_ok_;
+        return joint_ok_ && im_ok_ && target_ok_;
 
     }
 
