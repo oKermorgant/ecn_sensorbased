@@ -6,6 +6,4 @@
         <arg name="scene" value="$(find ecn_sensorbased)/scenes/pioneer.ttt"/>
     </include>
     
-    <!-- Load parameters for US sensor positions -->
-    <rosparam file="$(find ecn_sensorbased)/launch/us_config.yaml" command="load" ns="sensors"/>    
 </launch>
