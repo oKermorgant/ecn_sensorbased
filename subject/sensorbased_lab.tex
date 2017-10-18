@@ -35,14 +35,9 @@ The actual classes that are used are detailed in Appendix \ref{sec:classes}.\\
 
 \subsection{Environment setup}
 
-To use this lab (and for some other ROS labs) you need to initialize the ROS environment in order to have access to the ViSP library.
-To do so, download the following file and execute it:
-\begin{center}\cppstyle
-\begin{lstlisting}
-        wget http://www.irccyn.ec-nantes.fr/~kermorga/files/ros_user_setup.sh
-        sh ros_user_setup.sh
-\end{lstlisting}
-\end{center}In order to use an IDE like Qt Creator, you should open a new terminal and launch the IDE from the command line.\\
+ROS environment should already be set up in the computers. 
+In order to use an IDE like Qt Creator, you should open a terminal and launch the IDE from the command line.\\ A tutorial on how to use Qt Creator (or any other IDE 
+able to load CMake files) can be found on my webpage: \url{http://www.irccyn.ec-nantes.fr/\~kermorga/coding\%20tools.html\#config}.\\
 
 This lab is available on GitHub as a ROS package called \texttt{ecn\_sensorbased}. In order to download it, you should first go in the \texttt{ros/src} directory. The package can then be downloaded through git:
 \begin{center}\cppstyle
@@ -56,7 +51,7 @@ There is a dependency on another package:
  git clone https://github.com/oKermorgant/ecn_common.git
 \end{lstlisting}
 \end{center}
-Remember to call {\tt{catkin build}} after downloading the packages in your ROS workspace.
+Remember to call {\tt{catkin build}} after downloading the packages in your ROS workspace, and before trying to load it in the IDE.
 
 \subsection{Structure of the \texttt{ecn\_sensorbased} ROS package}
 
@@ -72,7 +67,6 @@ The package has the classical ROS structure:
 .4 qp.h.
 .4 utils.h.
 .2 launch.
-.3 us\_config.yaml.
 .3 vrep.launch.
 .2 scenes.
 .3 pioneer.ttt.
@@ -103,8 +97,7 @@ When both the simulation and the control program run, the ROS graph looks like t
 
 We can see that the simulator sends the joint states, camera image, target and sphere positions to the control node. In return, the control node sends the joint setpoints
 to the simulator. They are velocity setpoints for the wheels and the pan-tilt camera joints.\\
-The \texttt{check\_vitals} is a script that checks the control node is running and stops the simulation otherwise. It is launched with the simulator and should
-not be considered.
+
 
 
 \subsection{The PioneerCam robot}
@@ -216,8 +209,8 @@ Three functions are related to QP solvers, assuming the following formulation:
 
 In addition to the given classes and solvers, several utility function are defined:
 \begin{itemize}
- \item \texttt{void ecn::putAt(M, Ms, r, c)}: Writes matrix Ms inside matrix M, starting from given row and column.
- \item \texttt{void ecn::putAt(V, Vs, r)}: Writes column vector Vs inside vector V, starting from given row. These two functions do nothing but print an error
+ \item \texttt{void ecn::putAt(M, Ms, r, c)}: Writes matrix \texttt{Ms} inside matrix \texttt{M}, starting from given row and column.
+ \item \texttt{void ecn::putAt(V, Vs, r)}: Writes column vector \texttt{Vs} inside vector \texttt{V}, starting from given row. These two functions do nothing but print an error
  if the submatrix or vector does not fit in the main one.
  \item \texttt{double ecn::weight(s, s\_act, s\_max)}: Returns the weighting function defined during the lectures:
  \begin{equation*}
@@ -225,8 +218,8 @@ In addition to the given classes and solvers, several utility function are defin
               0 & \text{if } s < s_{\text{act}} \\
               \displaystyle \frac{s-s_{\text{act}}}{s_{\max}-s} & \text{otherwise}
              \end{array}\right.
- \end{equation*}This function is designed for upper bounds, but can be easily used for lower bounds by sending the opposite values formulation
- $(s,s_{\text{act}}, s_{\max})$.
+ \end{equation*}This function is designed for upper bounds (ie. assumes that $s_{\text{act}} < s_{\text{max}}$), but can be easily used for lower bounds by sending the opposite values formulation
+ $(-s,-s_{\text{act}}, -s_{\max})$.
 \item \texttt{double ecn::weightBothSigns(s, s\_act, s\_max)}: Returns the weighting function considering both lower and upper bounds, assuming opposite bounds (
 which is true for the wheel velocities and the visibility).
 \end{itemize}
