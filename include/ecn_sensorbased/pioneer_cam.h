@@ -87,7 +87,7 @@ protected:
     ros::Subscriber target_sub_, sphere_sub_;
     geometry_msgs::Pose2D target_pose_;
     // init subs
-    bool joint_ok_, us_ok_, im_ok_, target_ok_;
+    bool joint_ok_, im_ok_, target_ok_;
 
     // image point
     ecn::ColorDetector color_detector;
