@@ -45,12 +45,6 @@ This lab is available on GitHub as a ROS package called \texttt{ecn\_sensorbased
  git clone https://github.com/oKermorgant/ecn_sensorbased.git
 \end{lstlisting}
 \end{center}
-There is a dependency on another package:
-\begin{center}\cppstyle
-\begin{lstlisting}
- git clone https://github.com/oKermorgant/ecn_common.git
-\end{lstlisting}
-\end{center}
 Remember to call {\tt{catkin build}} after downloading the packages in your ROS workspace, and before trying to load it in the IDE.
 
 \subsection{Structure of the \texttt{ecn\_sensorbased} ROS package}
@@ -70,8 +64,6 @@ The package has the classical ROS structure:
 .3 vrep.launch.
 .2 scenes.
 .3 pioneer.ttt.
-.2 scripts.
-.3 check\_vitals.py.
 .2 src.
 .3 main.cpp.
 .3 pioneer\_cam.cpp.
@@ -97,7 +89,6 @@ When both the simulation and the control program run, the ROS graph looks like t
 
 We can see that the simulator sends the joint states, camera image, target and sphere positions to the control node. In return, the control node sends the joint setpoints
 to the simulator. They are velocity setpoints for the wheels and the pan-tilt camera joints.\\
-
 
 
 \subsection{The PioneerCam robot}
