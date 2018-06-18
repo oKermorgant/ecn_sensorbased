@@ -1,6 +1,7 @@
 #include <ecn_sensorbased/pioneer_cam.h>
 #include <visp/vpFeaturePoint.h>
-#include <ecn_common/optim.h>
+#include <ecn_common/visp_utils.h>
+#include <ecn_common/vpQuadProg.h>
 
 using namespace std;
 
@@ -17,6 +18,10 @@ int main(int argc, char** argv)
 
     int it = 0;
     vpColVector v(4);
+
+    // solver
+    vpQuadProg qp;
+
 
     while(ros::ok())
     {
