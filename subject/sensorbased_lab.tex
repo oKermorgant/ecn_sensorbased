@@ -1,6 +1,6 @@
 \documentclass{ecnreport}
 
-\stud{EMARO-ARIA ROBA M2}
+\stud{M2 CORO-IMARO}
 \topic{Sensor-based control}
 
 \begin{document}
@@ -37,7 +37,7 @@ The actual classes that are used are detailed in Appendix \ref{sec:classes}.\\
 
 ROS environment should already be set up in the computers. 
 In order to use an IDE like Qt Creator, you should open a terminal and launch the IDE from the command line.\\ A tutorial on how to use Qt Creator (or any other IDE 
-able to load CMake files) can be found on my webpage: \url{http://www.irccyn.ec-nantes.fr/\~kermorga/coding\%20tools.html\#config}.\\
+able to load CMake files) can be found on my webpage: \url{http://pagesperso.ls2n.fr/~kermorgant-o/coding\%20tools.html#config}.\\
 
 This lab is available on GitHub as a ROS package called \texttt{ecn\_sensorbased}. 
 On the P-ro computers, it can be downloaded and compiled using \texttt{rosdl ecn\_sensorbased}\\
@@ -129,9 +129,9 @@ However, this minimization should be done under the following constraints:
 \item Finally, we would like to have a trajectory that follows the one from \eqref{raw}. Do to so, a simple constraint is to write that we must have $v/\omega = v^*/\omega^*$. With this constraint, 
 the robot will follow the desired trajectory radius even if it is not at the desired velocity.
 \end{enumerate}
-From all theses constraints, we have to express how to build the canonical QP matrices and vectors in order to get the control as the solution to the problem (see Appendix \ref{qpsolvers}).
-
-
+From all theses constraints, we have to express how to build the canonical QP matrices and vectors in order to get the control\footnote{ O. Kanoun, F. Lamiraux, and P.-B. Wieber, “Kinematic Control of
+	Redundant Manipulators: Generalizing the Task-Priority Framework to Inequality
+	Task.”. In: IEEE Trans. on Robotics, 2001} as the solution to the problem (see Appendix \ref{qpsolvers}).
 
 \appendix
 
@@ -206,16 +206,6 @@ In addition to the given classes and solvers, several utility function are defin
  \item \texttt{void ecn::putAt(M, Ms, r, c)}: Writes matrix \texttt{Ms} inside matrix \texttt{M}, starting from given row and column.
  \item \texttt{void ecn::putAt(V, Vs, r)}: Writes column vector \texttt{Vs} inside vector \texttt{V}, starting from given row. These two functions do nothing but print an error
  if the submatrix or vector does not fit in the main one.
- \item \texttt{double ecn::weight(s, s\_act, s\_max)}: Returns the weighting function defined during the lectures:
- \begin{equation*}
-  h = \left\{\begin{array}{cl}
-              0 & \text{if } s < s_{\text{act}} \\
-              \displaystyle \frac{s-s_{\text{act}}}{s_{\max}-s} & \text{otherwise}
-             \end{array}\right.
- \end{equation*}This function is designed for upper bounds (ie. assumes that $s_{\text{act}} < s_{\text{max}}$), but can be easily used for lower bounds by sending the opposite values formulation
- $(-s,-s_{\text{act}}, -s_{\max})$.
-\item \texttt{double ecn::weightBothSigns(s, s\_act, s\_max)}: Returns the weighting function considering both lower and upper bounds, assuming opposite bounds (
-which is true for the wheel velocities and the visibility).
 \end{itemize}
 
 
