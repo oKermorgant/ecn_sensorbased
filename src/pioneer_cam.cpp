@@ -63,11 +63,10 @@ void PioneerCam::setVelocity(const vpColVector &v)
         a = 1;
 
     // scale wheel velocities if activated
-    if(vpMath::abs(joint_setpoint_.velocity[0])/w_max_ > 1)
+    if(vpMath::abs(joint_setpoint_.velocity[0])/w_max_ > 1.01)
         cout << "*** Left wheel velocity above limit (" << joint_setpoint_.velocity[0] << ") ***" << endl;
-    if(vpMath::abs(joint_setpoint_.velocity[1])/w_max_ > 1)
+    if(vpMath::abs(joint_setpoint_.velocity[1])/w_max_ > 1.01)
         cout << "*** Right wheel velocity above limit (" << joint_setpoint_.velocity[1] << ") ***" << endl;
-
 
     joint_setpoint_.velocity[0] *= 1./a;
     joint_setpoint_.velocity[1] *= 1./a;
@@ -185,6 +184,9 @@ void PioneerCam::readTargetPose(const geometry_msgs::PoseConstPtr &msg)
 void PioneerCam::readSpherePose(const geometry_msgs::PoseConstPtr &msg)
 {
     im_ok_ = true;
-    s_im_[0] = msg->position.x/msg->position.z;
     s_im_[1] = msg->position.y/msg->position.z;
+    if(msg->position.z > 0)
+      s_im_[0] = msg->position.x/msg->position.z;
+    else if(msg->position.x != 0)
+      s_im_[0] =  1.2*std::abs(msg->position.x)*color_detector.xLim()/msg->position.x;
 }
