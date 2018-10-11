@@ -50,7 +50,8 @@ include_directories(
   ${VISP_INCLUDE_DIRS}
 )
 
-add_library(ecn_sensorbased include/ecn_sensorbased/pioneer_cam.h src/pioneer_cam.cpp)
+add_library(ecn_sensorbased include/ecn_sensorbased/pioneer_cam.h src/pioneer_cam.cpp
+    include/ecn_sensorbased/optim.h src/optim.cpp)
 target_link_libraries(ecn_sensorbased ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${VISP_LIBRARIES})
 
 add_executable(pioneer  src/main.cpp)

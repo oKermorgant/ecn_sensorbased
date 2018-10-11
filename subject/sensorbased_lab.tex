@@ -61,8 +61,7 @@ The package has the classical ROS structure:
 .2 include.
 .3 ecn\_sensorbased. 
 .4 pioneer\_cam.h.
-.4 qp.h.
-.4 utils.h.
+.4 optim.h.
 .2 launch.
 .3 vrep.launch.
 .2 scenes.
@@ -70,6 +69,7 @@ The package has the classical ROS structure:
 .2 src.
 .3 main.cpp.
 .3 pioneer\_cam.cpp.
+.3 optim.cpp.
 .2 subject.
 .2 package.xml.
 .2 CMakeLists.txt.
@@ -80,7 +80,8 @@ The package has the classical ROS structure:
 \end{figure}
 
 The only file to be modified is \texttt{main.cpp}, which is the main file for the C++ program. \\
-The simulation can be launched with: \texttt{roslaunch ecn\_sensorbased vrep.launch}. It will be run and stopped automatically from the main control.
+The simulation can be launched with: \texttt{roslaunch ecn\_sensorbased vrep.launch}. It has to be run manually by clicking the \texttt{Play} button. 
+In case the robot goes wild, you can hit the \texttt{Stop} button to reset the simulation.
 
 When both the simulation and the control program run, the ROS graph looks like this:
 
@@ -193,9 +194,9 @@ Three functions are related to QP solvers, assuming the following formulation:
 \end{equation}
 
 \begin{itemize}
- \item \texttt{qp.solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
- \item  \texttt{qp.solveQPe ( Q, r, A, b, x)} with only equality constraints
- \item  \texttt{qp.solveQPi ( Q, r, C, d, x)} with only inequality constraints
+ \item \texttt{ecn::solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
+ \item  \texttt{ecn::solveQPe ( Q, r, A, b, x)} with only equality constraints
+ \item  \texttt{ecn::solveQPi ( Q, r, C, d, x)} with only inequality constraints
 \end{itemize}
 
 
