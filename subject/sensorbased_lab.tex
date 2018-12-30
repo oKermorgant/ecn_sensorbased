@@ -103,7 +103,7 @@ of the mobile base considered as a unicycle, and $(q_p, q_t)$ are the pan and ti
  \left\{\begin{array}{ll}
          v^* &= \lambda_v(x-d) \\ \omega^* &= \lambda_{\omega}\text{atan2}(y, x)
         \end{array}\right.
-\end{equation}where $(x,y)$ is the coordinate of the target in the robot frame, $d$ is the final distance to the target (set to 0.1 m), and $(\lambda_v, \lambda_{\omega})$ are the control gains.\\
+\end{equation}where $(x,y)$ is the coordinate of the target in the robot frame, $d$ is the final distance to the target (set to 0.1 m), and $(\lambda_v, \lambda_{\omega})$ are the control gains (set to 0.5)\\
 
 You should verify that this control runs fine, even if it raises several problems:
 \begin{itemize}
@@ -133,6 +133,7 @@ the robot will follow the desired trajectory radius even if it is not at the des
 From all theses constraints, we have to express how to build the canonical QP matrices and vectors in order to get the control\footnote{ O. Kanoun, F. Lamiraux, and P.-B. Wieber, “Kinematic Control of
 	Redundant Manipulators: Generalizing the Task-Priority Framework to Inequality
 	Task.”. In: IEEE Trans. on Robotics, 2001} as the solution to the problem (see Appendix \ref{qpsolvers}).
+The gain related to the constraints is expressed in the variable \texttt{lc} and is set to 2.
 
 \appendix
 
@@ -194,9 +195,9 @@ Three functions are related to QP solvers, assuming the following formulation:
 \end{equation}
 
 \begin{itemize}
- \item \texttt{ecn::solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
- \item  \texttt{ecn::solveQPe ( Q, r, A, b, x)} with only equality constraints
- \item  \texttt{ecn::solveQPi ( Q, r, C, d, x)} with only inequality constraints
+ \item \texttt{qp.solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
+ \item  \texttt{qp.solveQPe ( Q, r, A, b, x)} with only equality constraints
+ \item  \texttt{qp.solveQPi ( Q, r, C, d, x)} with only inequality constraints
 \end{itemize}
 
 

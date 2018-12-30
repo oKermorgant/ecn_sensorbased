@@ -1,6 +1,7 @@
 #include <ecn_sensorbased/pioneer_cam.h>
 #include <visp/vpFeaturePoint.h>
-#include <ecn_sensorbased/optim.h>
+#include <ecn_common/vpQuadProg.h>
+#include <ecn_common/visp_utils.h>
 
 using namespace std;
 
@@ -10,13 +11,17 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "control_node");
     PioneerCam robot;
 
-    // gains
     // pose error gain
-    double lv = .5;
+    const double lv = .5;
+    // constraints gain
+    const double lc = 2;
     geometry_msgs::Pose2D target;
 
     int it = 0;
     vpColVector v(4);
+
+    // QP solver
+    vpQuadProg qp;
 
 
     while(ros::ok())
