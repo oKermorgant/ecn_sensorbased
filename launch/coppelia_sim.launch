@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Launch Coppelia Sim with Pioneer world -->
+    <include file="$(find coppeliasim_ros_launcher)/coppelia_sim.launch">
+        <arg name="scene" value="$(find ecn_sensorbased)/scenes/pioneer.ttt"/>
+    </include>
+    
+</launch>

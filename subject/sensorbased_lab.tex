@@ -18,18 +18,18 @@ The goal is this lab is to control a mobile robot equipped with a pan-tilt camer
 
 \begin{figure}[h!]\centering
  \includegraphics[width=.8\linewidth]{vrep}
- \caption{V-REP simulator with the mobile robot, image from the onboard camera and US sensors.}
+ \caption{Coppelia Sim with the mobile robot, image from the onboard camera and US sensors.}
  \label{fig:vrep}
 \end{figure}
 
-The robot is simulated with V-REP\footnote{Virtual robot experimentation platform, http://www.coppeliarobotics.com/}.
+The robot is simulated with Coppelia Sim\footnote{Virtual robot experimentation platform, https://www.coppeliarobotics.com/}.
 In the simulation are placed a green sphere and a target. The goal of the robot is to move to the target position while maintaining visibility on the sphere. The robot also have US sensors
 to detect obstacles but they are not used in this lab.
 The robot control will be performed in C++ and will rely on:
 
 \begin{itemize}
  \item The ROS framework to handle communication between the simulator and the control program (actually hidden inside the robot class).
- \item The ViSP library\footnote{Visual Servoing Platform, http://visp.inria.fr} to manipulate vectors and matrices and to perform linear algebra.
+ \item The ViSP library\footnote{Visual Servoing Platform, https://visp.inria.fr} to manipulate vectors and matrices and to perform linear algebra.
 \end{itemize}
 The actual classes that are used are detailed in Appendix \ref{sec:classes}.\\
 
@@ -63,7 +63,7 @@ The package has the classical ROS structure:
 .4 pioneer\_cam.h.
 .4 optim.h.
 .2 launch.
-.3 vrep.launch.
+.3 coppelia\_sim.launch.
 .2 scenes.
 .3 pioneer.ttt.
 .2 src.
@@ -80,7 +80,7 @@ The package has the classical ROS structure:
 \end{figure}
 
 The only file to be modified is \texttt{main.cpp}, which is the main file for the C++ program. \\
-The simulation can be launched with: \texttt{roslaunch ecn\_sensorbased vrep.launch}. It has to be run manually by clicking the \texttt{Play} button. 
+The simulation can be launched with: \texttt{roslaunch ecn\_sensorbased coppelia\_sim.launch}. It has to be run manually by clicking the \texttt{Play} button. 
 In case the robot goes wild, you can hit the \texttt{Stop} button to reset the simulation.
 
 When both the simulation and the control program run, the ROS graph looks like this:

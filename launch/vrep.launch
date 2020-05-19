@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-    <!-- Launch V-REP with Pioneer world -->
-    <include file="$(find vrep_ros_launcher)/vrep.launch">
-        <arg name="scene" value="$(find ecn_sensorbased)/scenes/pioneer.ttt"/>
-    </include>
-    
-</launch>
