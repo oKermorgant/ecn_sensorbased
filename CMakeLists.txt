@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+ cmake_modules
   cv_bridge
   roscpp
   sensor_msgs

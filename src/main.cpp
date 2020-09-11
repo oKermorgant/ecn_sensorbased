@@ -1,6 +1,6 @@
 #include <ecn_sensorbased/pioneer_cam.h>
 #include <visp/vpFeaturePoint.h>
-#include <ecn_common/vpQuadProg.h>
+#include <visp/vpQuadProg.h>
 #include <ecn_common/visp_utils.h>
 
 using namespace std;
