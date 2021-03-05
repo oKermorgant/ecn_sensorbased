@@ -18,7 +18,8 @@ int main(int argc, char** argv)
     geometry_msgs::Pose2D target;
 
     int it = 0;
-    vpColVector v(4);
+    // robot command u = (v, omega, dot q_p, dot q_t)
+    vpColVector u(4);
 
     // QP solver
     vpQuadProg qp;
@@ -35,13 +36,13 @@ int main(int argc, char** argv)
             target = robot.getTargetRelativePose();
 
             // linear velocity
-            v[0] = lv*(target.x - .1);
+            u[0] = lv*(target.x - .1);
             // angular velocity
-            v[1] = 5*lv*std::atan2(target.y, target.x);
+            u[1] = 5*lv*std::atan2(target.y, target.x);
 
-            cout << "v: " << v.t() << endl;
+            cout << "u: " << u.t() << endl;
 
-            robot.setVelocity(v);
+            robot.setVelocity(u);
         }
     }
 }

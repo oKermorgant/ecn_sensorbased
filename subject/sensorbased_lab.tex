@@ -98,7 +98,7 @@ to the simulator. They are velocity setpoints for the wheels and the pan-tilt ca
 
 \subsection{The PioneerCam robot}
 
-The simulated robot is a Pioneer P3dx. A pan-tilt camera is placed at the front of the robot. The robot is controlled through joint velocity with $\dot \q = (v, \omega, \dot q_p, \dot q_t)$, where $(v,\omega)$ are the linear and angular velocity
+The simulated robot is a Pioneer P3dx. A pan-tilt camera is placed at the front of the robot. The robot is controlled through joint velocity with $\u = (v, \omega, \dot q_p, \dot q_t)$, where $(v,\omega)$ are the linear and angular velocity
 of the mobile base considered as a unicycle, and $(q_p, q_t)$ are the pan and tilt joint angles. In the initial state of the control node, the visibility is not taken into account and the robot follows a very simple control law:
 \begin{equation}\label{raw}
  \left\{\begin{array}{ll}
@@ -172,10 +172,10 @@ The main methods of the \texttt{PioneerCam} class can be seen in the \texttt{pio
   \item \texttt{double robot.radius()}, \texttt{robot.base()}, \texttt{robot.wmax()} : kinematic model.
   \item \texttt{void robot.getImagePoint(vpColVector \&)}: get the measured center of gravity of the sphere in the image, in normalized coordinates.
   \item \texttt{vpColVector robot.getCamLimits()}: get the upper bounds for $(x,y)$. Lower bounds are the opposite.
-  \item \texttt{vpMatrix robot.getCamJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\dot \q$. This Jacobian is to be multiplied
+  \item \texttt{vpMatrix robot.getCamJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\u$. This Jacobian is to be multiplied
   by the interaction matrix of a point to get the actual Jacobian of the image coordinates with regards to the robot command.
  \end{itemize}
-\item \texttt{robot.setVelocity(vpColVector)}: send a $\dot \q$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
+\item \texttt{robot.setVelocity(vpColVector)}: send a $\u$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
 \end{itemize}
 
 % 
