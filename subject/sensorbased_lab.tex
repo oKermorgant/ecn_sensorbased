@@ -40,18 +40,18 @@ ROS environment should already be set up in the computers.
 In order to use an IDE like Qt Creator, you should open a terminal and launch the IDE from the command line.\\ A tutorial on how to use Qt Creator (or any other IDE 
 able to load CMake files) can be found on my webpage: \url{http://pagesperso.ls2n.fr/~kermorgant-o/coding\%20tools.html#config}.\\
 
-This lab is available on GitHub as a ROS package called \texttt{ecn\_sensorbased}. 
-On the P-ro computers, it can be downloaded and compiled using \texttt{rosdl ecn\_sensorbased}\\
+This lab is available on GitHub as a ROS package called \okttt{ecn_sensorbased}. 
+On the P-ro computers, it can be downloaded and compiled using \okttt{rosdl ecn_sensorbased}\\
 
-If you want to do it manually, you should first go in the \texttt{ros/src} directory. The package can then be downloaded through git:
+If you want to do it manually, you should first go in the \okttt{ros/src} directory. The package can then be downloaded through git:
 \begin{center}\cppstyle
 \begin{lstlisting}
  git clone https://github.com/oKermorgant/ecn_sensorbased.git
 \end{lstlisting}
 \end{center}
-Remember to call {\tt{catkin build}} after downloading the packages in your ROS workspace, and before trying to load it in the IDE.
+Remember to call {\okttt{catkin build}} after downloading the packages in your ROS workspace, and before trying to load it in the IDE.
 
-\subsection{Structure of the \texttt{ecn\_sensorbased} ROS package}
+\subsection{Structure of the \okttt{ecn_sensorbased} ROS package}
 
 The package has the classical ROS structure:
 \begin{figure}[h]
@@ -80,9 +80,9 @@ The package has the classical ROS structure:
 \caption{Files used by the package}
 \end{figure}
 
-The only file to be modified is \texttt{main.cpp}, which is the main file for the C++ program. \\
-The simulation can be launched with: \texttt{roslaunch ecn\_sensorbased coppelia\_sim.launch}. It has to be run manually by clicking the \texttt{Play} button. 
-In case the robot goes wild, you can hit the \texttt{Stop} button to reset the simulation.
+The only file to be modified is \okttt{main.cpp}, which is the main file for the C++ program. \\
+The simulation can be launched with: \okttt{roslaunch ecn_sensorbased coppelia_sim.launch}. It has to be run manually by clicking the \okttt{Play} button. 
+In case the robot goes wild, you can hit the \okttt{Stop} button to reset the simulation.
 
 When both the simulation and the control program run, the ROS graph looks like this:
 
@@ -134,7 +134,7 @@ the robot will follow the desired trajectory radius even if it is not at the des
 From all theses constraints, we have to express how to build the canonical QP matrices and vectors in order to get the control\footnote{ O. Kanoun, F. Lamiraux, and P.-B. Wieber, “Kinematic Control of
 	Redundant Manipulators: Generalizing the Task-Priority Framework to Inequality
 	Task.”. In: IEEE Trans. on Robotics, 2001} as the solution to the problem (see Appendix \ref{qpsolvers}).
-The gain related to the constraints is expressed in the variable \texttt{lc} and is set to 2.
+The gain related to the constraints is expressed in the variable \okttt{lc} and is set to 2.
 
 \appendix
 
@@ -146,8 +146,8 @@ This library includes many tools for linear algebra, especially for 3D transform
 The documentation is found here: \url{http://visp-doc.inria.fr/doxygen/visp-daily/classes.html}.\\
 The main classes from ViSP (at least in this lab) are:
 \begin{itemize}
-\item \texttt{vpMatrix} represents a classical matrix, can then be transposed, inversed (or pseudo-inversed), multiplied with a vector, etc.
-\item \texttt{vpColVector} is a column vector with classical mathematical properties.
+\item \okttt{vpMatrix} represents a classical matrix, can then be transposed, inversed (or pseudo-inversed), multiplied with a vector, etc.
+\item \okttt{vpColVector} is a column vector with classical mathematical properties.
 \end{itemize}
 These class can be declared and used as follows:
 \begin{center}\cppstyle
@@ -165,23 +165,23 @@ These class can be declared and used as follows:
 The PioneerCam class hides all the ROS communication aspects in order to have a higher-level access. As this is not a lab on robot modeling, all Jacobians are already 
 available - even if it could be a nice exercice to compute the camera Jacobian. 
 
-The main methods of the \texttt{PioneerCam} class can be seen in the \texttt{pioneer.h} file:
+The main methods of the \okttt{PioneerCam} class can be seen in the \okttt{pioneer.h} file:
 \begin{itemize}
  \item Getters for robot model or measurements:
  \begin{itemize}
-  \item \texttt{double robot.radius()}, \texttt{robot.base()}, \texttt{robot.wmax()} : kinematic model.
-  \item \texttt{void robot.getImagePoint(vpColVector \&)}: get the measured center of gravity of the sphere in the image, in normalized coordinates.
-  \item \texttt{vpColVector robot.getCamLimits()}: get the upper bounds for $(x,y)$. Lower bounds are the opposite.
-  \item \texttt{vpMatrix robot.getCamJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\u$. This Jacobian is to be multiplied
+  \item \okttt{double robot.radius()}, \okttt{robot.base()}, \okttt{robot.wmax()} : kinematic model.
+  \item \okttt{void robot.getImagePoint(vpColVector \&)}: get the measured center of gravity of the sphere in the image, in normalized coordinates.
+  \item \okttt{vpColVector robot.getCamLimits()}: get the upper bounds for $(x,y)$. Lower bounds are the opposite.
+  \item \okttt{vpMatrix robot.getCamJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\u$. This Jacobian is to be multiplied
   by the interaction matrix of a point to get the actual Jacobian of the image coordinates with regards to the robot command.
  \end{itemize}
-\item \texttt{robot.setVelocity(vpColVector)}: send a $\u$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
+\item \okttt{robot.setVelocity(vpColVector)}: send a $\u$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
 \end{itemize}
 
 % 
 % \begin{itemize}
-%  \item \texttt{setVelocity(vpColVector)}: sends a $(v, \omega, \dot q_p, \dot q_t)$ velocity to the robot, wheels velocity limits will be ensured
-%  \item \texttt{getImagePoint(vpColVector \&)}: gives the current position (normalized coordinates) of the sphere in the image
+%  \item \okttt{setVelocity(vpColVector)}: sends a $(v, \omega, \dot q_p, \dot q_t)$ velocity to the robot, wheels velocity limits will be ensured
+%  \item \okttt{getImagePoint(vpColVector \&)}: gives the current position (normalized coordinates) of the sphere in the image
 % \end{itemize}
 
 \subsection{QP solvers}\label{qpsolvers}
@@ -196,9 +196,9 @@ Three functions are related to QP solvers, assuming the following formulation:
 \end{equation}
 
 \begin{itemize}
- \item \texttt{qp.solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
- \item  \texttt{qp.solveQPe ( Q, r, A, b, x)} with only equality constraints
- \item  \texttt{qp.solveQPi ( Q, r, C, d, x)} with only inequality constraints
+ \item \okttt{qp.solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
+ \item  \okttt{qp.solveQPe ( Q, r, A, b, x)} with only equality constraints
+ \item  \okttt{qp.solveQPi ( Q, r, C, d, x)} with only inequality constraints
 \end{itemize}
 
 
@@ -206,8 +206,8 @@ Three functions are related to QP solvers, assuming the following formulation:
 
 In addition to the given classes and solvers, several utility function are defined:
 \begin{itemize}
- \item \texttt{void ecn::putAt(M, Ms, r, c)}: Writes matrix \texttt{Ms} inside matrix \texttt{M}, starting from given row and column.
- \item \texttt{void ecn::putAt(V, Vs, r)}: Writes column vector \texttt{Vs} inside vector \texttt{V}, starting from given row. These two functions do nothing but print an error
+ \item \okttt{void ecn::putAt(M, Ms, r, c)}: Writes matrix \okttt{Ms} inside matrix \okttt{M}, starting from given row and column.
+ \item \okttt{void ecn::putAt(V, Vs, r)}: Writes column vector \okttt{Vs} inside vector \okttt{V}, starting from given row. These two functions do nothing but print an error
  if the submatrix or vector does not fit in the main one.
 \end{itemize}
 

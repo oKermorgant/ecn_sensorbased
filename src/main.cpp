@@ -24,7 +24,6 @@ int main(int argc, char** argv)
     // QP solver
     vpQuadProg qp;
 
-
     while(ros::ok())
     {
         it++;
