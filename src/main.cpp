@@ -17,7 +17,6 @@ int main(int argc, char** argv)
     const double lc = 2;
     geometry_msgs::Pose2D target;
 
-    int it = 0;
     // robot command u = (v, omega, dot q_p, dot q_t)
     vpColVector u(4);
 
@@ -26,22 +25,21 @@ int main(int argc, char** argv)
 
     while(ros::ok())
     {
-        it++;
         cout << "-------------" << endl;
 
-        if(robot.ok())
+        if(robot.stateReceived())
         {
             // get robot and target positions to get position error
-            target = robot.getTargetRelativePose();
+            target = robot.targetRelativePose();
 
             // linear velocity
             u[0] = lv*(target.x - .1);
             // angular velocity
-            u[1] = 5*lv*std::atan2(target.y, target.x);
+            u[1] = 5*lc*std::atan2(target.y, target.x);
 
             cout << "u: " << u.t() << endl;
 
-            robot.setVelocity(u);
+            robot.sendVelocity(u);
         }
     }
 }

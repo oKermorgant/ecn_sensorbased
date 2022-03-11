@@ -16,6 +16,7 @@
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
 #include <ecn_common/color_detector.h>
+#include <visp/vpFeaturePoint.h>
 
 
 class PioneerCam
@@ -24,17 +25,16 @@ public:
     PioneerCam();
 
     // send a velocity to the joints
-    void setVelocity(const vpColVector &v);
+    void sendVelocity(const vpColVector &v);
 
     // if the robot has received sensor data
-    bool ok() {
+    bool stateReceived() {
         ros::spinOnce();
         loop_.sleep();
 
         if(!(joint_ok_ && im_ok_ && target_ok_))
             std::cout << "Waiting for incoming messages... did you start the simulation?\n";
         return joint_ok_ && im_ok_ && target_ok_;
-
     }
 
     // getters
@@ -43,16 +43,21 @@ public:
     double wmax() {return w_max_;}
 
     // get target pose in robot frame
-    geometry_msgs::Pose2D getTargetRelativePose() {return target_pose_;}
+    geometry_msgs::Pose2D targetRelativePose() const {return target_pose_;}
 
     // get the joint values
-    inline vpColVector getJoints() {return q_;}
+    inline vpColVector q() const {return q_;}
 
     // get the current image point
-    inline void getImagePoint(vpColVector &_s) {_s = s_im_;}
+    inline vpFeaturePoint imagePoint() const
+    {
+      vpFeaturePoint p;
+      p.set_xyZ(s_im_[0], s_im_[1], 1.);
+      return p;
+    }
 
     // get the camera x-y visibility limits
-    inline vpColVector getCamLimits()
+    inline vpColVector camLimits()
     {
         vpColVector l(2);
         l[0] = color_detector.xLim();
@@ -61,8 +66,8 @@ public:
     }
 
     // get Jacobian of camera wrt joint velocities
-    vpMatrix getCamJacobian(const vpColVector &_q);
-    inline vpMatrix getCamJacobian() {return getCamJacobian(q_);}
+    vpMatrix camJacobian(const vpColVector &_q) const ;
+    inline vpMatrix camJacobian()  const {return camJacobian(q_);}
 
 protected:
     // robot model

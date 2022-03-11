@@ -170,12 +170,12 @@ The main methods of the \okttt{PioneerCam} class can be seen in the \okttt{pione
  \item Getters for robot model or measurements:
  \begin{itemize}
   \item \okttt{double robot.radius()}, \okttt{robot.base()}, \okttt{robot.wmax()} : kinematic model.
-  \item \okttt{void robot.getImagePoint(vpColVector \&)}: get the measured center of gravity of the sphere in the image, in normalized coordinates.
-  \item \okttt{vpColVector robot.getCamLimits()}: get the upper bounds for $(x,y)$. Lower bounds are the opposite.
-  \item \okttt{vpMatrix robot.getCamJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\u$. This Jacobian is to be multiplied
+  \item \okttt{vpFeaturePoint robot.imagePoint()}: get the measured center of gravity of the sphere in the image, in normalized coordinates.
+  \item \okttt{vpColVector robot.camLimits()}: get the upper bounds for $(x,y)$. Lower bounds are the opposite.
+  \item \okttt{vpMatrix robot.camJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\u$. This Jacobian is to be multiplied
   by the interaction matrix of a point to get the actual Jacobian of the image coordinates with regards to the robot command.
  \end{itemize}
-\item \okttt{robot.setVelocity(vpColVector)}: send a $\u$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
+\item \okttt{robot.sendVelocity(vpColVector)}: send a $\u$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
 \end{itemize}
 
 % 
