@@ -8,7 +8,7 @@
 using namespace std;
 
 
-PioneerCam::PioneerCam() : it_(nh_), loop_(10)
+PioneerCam::PioneerCam() : loop_(10), it_(nh_)
 {
   // joint setpoint publisher
   joint_pub_  =nh_.advertise<sensor_msgs::JointState>("/joint_setpoint", 1);

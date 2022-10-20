@@ -35,7 +35,7 @@ int main(int argc, char** argv)
             // linear velocity
             u[0] = lv*(target.x - .1);
             // angular velocity
-            u[1] = 5*lc*std::atan2(target.y, target.x);
+            u[1] = 5*lv*std::atan2(target.y, target.x);
 
             cout << "u: " << u.t() << endl;
 
