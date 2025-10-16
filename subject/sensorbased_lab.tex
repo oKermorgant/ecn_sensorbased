@@ -40,18 +40,19 @@ ROS environment should already be set up in the computers.
 In order to use an IDE like Qt Creator, you should open a terminal and launch the IDE from the command line.\\ A tutorial on how to use Qt Creator (or any other IDE 
 able to load CMake files) can be found on my webpage: \url{http://pagesperso.ls2n.fr/~kermorgant-o/coding\%20tools.html#config}.\\
 
-This lab is available on GitHub as a ROS package called \okttt{ecn_sensorbased}. 
-On the P-ro computers, it can be downloaded and compiled using \okttt{rosdl ecn_sensorbased}\\
-
-If you want to do it manually, you should first go in the \okttt{ros/src} directory. The package can then be downloaded through git:
-\begin{center}\cppstyle
+This lab is available on GitHub as a ROS package called \okt{ecn_sensorbased}:
+\begin{center}\bashstyle
 \begin{lstlisting}
+ mkdir -p ~/ros/src
+ cd ~/ros/src
  git clone https://github.com/oKermorgant/ecn_sensorbased.git
+ ros1ws && catkin build # source ROS 1 before compiling
+ cd ecn_sensorbased && ideconf  # configure Qt Creator
 \end{lstlisting}
 \end{center}
-Remember to call {\okttt{catkin build}} after downloading the packages in your ROS workspace, and before trying to load it in the IDE.
+Remember to call {\okt{catkin build}} after downloading the packages in your ROS workspace, and before trying to load it in the IDE.
 
-\subsection{Structure of the \okttt{ecn_sensorbased} ROS package}
+\subsection{Structure of the \okt{ecn_sensorbased} ROS package}
 
 The package has the classical ROS structure:
 \begin{figure}[h]
@@ -80,9 +81,9 @@ The package has the classical ROS structure:
 \caption{Files used by the package}
 \end{figure}
 
-The only file to be modified is \okttt{main.cpp}, which is the main file for the C++ program. \\
-The simulation can be launched with: \okttt{roslaunch ecn_sensorbased coppelia_sim.launch}. It has to be run manually by clicking the \okttt{Play} button. 
-In case the robot goes wild, you can hit the \okttt{Stop} button to reset the simulation.
+The only file to be modified is \okt{main.cpp}, which is the main file for the C++ program. \\
+The simulation can be launched with: \okt{roslaunch ecn_sensorbased coppelia_sim.launch}. It has to be run manually by clicking the \okt{Play} button.
+In case the robot goes wild, you can hit the \okt{Stop} button to reset the simulation.
 
 When both the simulation and the control program run, the ROS graph looks like this:
 
@@ -122,7 +123,7 @@ However, this minimization should be done under the following constraints:
 \begin{enumerate}
  \item Wheel velocity limits: $|\omega_l| < \omega_{\max}$ and $|\omega_r| < \omega_{\max}$ where $(\omega_l, \omega_r)$ are the left and right wheel velocities. 
  They are linked to the Cartesian velocities through the kinematic model:
-\begin{equation}
+\begin{equation}\label{eq:wheels}
   \left\{\begin{array}{ll}
          v &= \frac{r}{2}(\omega_l + \omega_r) \\ \omega &=  \frac{r}{2b}(\omega_r - \omega_l)
         \end{array}\right.
@@ -134,7 +135,7 @@ the robot will follow the desired trajectory radius even if it is not at the des
 From all theses constraints, we have to express how to build the canonical QP matrices and vectors in order to get the control\footnote{ O. Kanoun, F. Lamiraux, and P.-B. Wieber, “Kinematic Control of
 	Redundant Manipulators: Generalizing the Task-Priority Framework to Inequality
 	Task.”. In: IEEE Trans. on Robotics, 2001} as the solution to the problem (see Appendix \ref{qpsolvers}).
-The gain related to the constraints is expressed in the variable \okttt{lc} and is set to 2.
+The gain related to the constraints is expressed in the variable \okt{lc} and is set to 2.
 
 \appendix
 
@@ -146,8 +147,8 @@ This library includes many tools for linear algebra, especially for 3D transform
 The documentation is found here: \url{http://visp-doc.inria.fr/doxygen/visp-daily/classes.html}.\\
 The main classes from ViSP (at least in this lab) are:
 \begin{itemize}
-\item \okttt{vpMatrix} represents a classical matrix, can then be transposed, inversed (or pseudo-inversed), multiplied with a vector, etc.
-\item \okttt{vpColVector} is a column vector with classical mathematical properties.
+\item \okt{vpMatrix} represents a classical matrix, can then be transposed, inversed (or pseudo-inversed), multiplied with a vector, etc.
+\item \okt{vpColVector} is a column vector with classical mathematical properties.
 \end{itemize}
 These class can be declared and used as follows:
 \begin{center}\cppstyle
@@ -165,23 +166,23 @@ These class can be declared and used as follows:
 The PioneerCam class hides all the ROS communication aspects in order to have a higher-level access. As this is not a lab on robot modeling, all Jacobians are already 
 available - even if it could be a nice exercice to compute the camera Jacobian. 
 
-The main methods of the \okttt{PioneerCam} class can be seen in the \okttt{pioneer.h} file:
+The main methods of the \okt{PioneerCam} class can be seen in the \okt{pioneer.h} file:
 \begin{itemize}
  \item Getters for robot model or measurements:
  \begin{itemize}
-  \item \okttt{double robot.radius()}, \okttt{robot.base()}, \okttt{robot.wmax()} : kinematic model.
-  \item \okttt{vpFeaturePoint robot.imagePoint()}: get the measured center of gravity of the sphere in the image, in normalized coordinates.
-  \item \okttt{vpColVector robot.camLimits()}: get the upper bounds for $(x,y)$. Lower bounds are the opposite.
-  \item \okttt{vpMatrix robot.camJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\u$. This Jacobian is to be multiplied
+  \item \okt{double robot.radius()}, \okt{robot.base()}, \okt{robot.wmax()} : kinematic model.
+  \item \okt{vpFeaturePoint robot.imagePoint()}: get the measured center of gravity of the sphere in the image, in normalized coordinates.
+  \item \okt{vpColVector robot.camLimits()}: get the upper bounds for $(x,y)$. Lower bounds are the opposite.
+  \item \okt{vpMatrix robot.camJacobian()}: get the Jacobian between the camera velocity screw in its own frame and the robot command $\u$. This Jacobian is to be multiplied
   by the interaction matrix of a point to get the actual Jacobian of the image coordinates with regards to the robot command.
  \end{itemize}
-\item \okttt{robot.sendVelocity(vpColVector)}: send a $\u$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
+\item \okt{robot.sendVelocity(vpColVector)}: send a $\u$ velocity. Wheel velocity limits will be applied before actually sending it to the simulator.
 \end{itemize}
 
 % 
 % \begin{itemize}
-%  \item \okttt{setVelocity(vpColVector)}: sends a $(v, \omega, \dot q_p, \dot q_t)$ velocity to the robot, wheels velocity limits will be ensured
-%  \item \okttt{getImagePoint(vpColVector \&)}: gives the current position (normalized coordinates) of the sphere in the image
+%  \item \okt{setVelocity(vpColVector)}: sends a $(v, \omega, \dot q_p, \dot q_t)$ velocity to the robot, wheels velocity limits will be ensured
+%  \item \okt{getImagePoint(vpColVector \&)}: gives the current position (normalized coordinates) of the sphere in the image
 % \end{itemize}
 
 \subsection{QP solvers}\label{qpsolvers}
@@ -196,9 +197,9 @@ Three functions are related to QP solvers, assuming the following formulation:
 \end{equation}
 
 \begin{itemize}
- \item \okttt{qp.solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
- \item  \okttt{qp.solveQPe ( Q, r, A, b, x)} with only equality constraints
- \item  \okttt{qp.solveQPi ( Q, r, C, d, x)} with only inequality constraints
+ \item \okt{qp.solveQP ( Q, r, A, b, C, d, x)} for a classical QP with equality and inequality constraints
+ \item  \okt{qp.solveQPe ( Q, r, A, b, x)} with only equality constraints
+ \item  \okt{qp.solveQPi ( Q, r, C, d, x)} with only inequality constraints
 \end{itemize}
 
 
@@ -206,10 +207,47 @@ Three functions are related to QP solvers, assuming the following formulation:
 
 In addition to the given classes and solvers, several utility function are defined:
 \begin{itemize}
- \item \okttt{void ecn::putAt(M, Ms, r, c)}: Writes matrix \okttt{Ms} inside matrix \okttt{M}, starting from given row and column.
- \item \okttt{void ecn::putAt(V, Vs, r)}: Writes column vector \okttt{Vs} inside vector \okttt{V}, starting from given row. These two functions do nothing but print an error
+ \item \okt{void ecn::putAt(M, Ms, r, c)}: Writes matrix \okt{Ms} inside matrix \okt{M}, starting from given row and column.
+ \item \okt{void ecn::putAt(V, Vs, r)}: Writes column vector \okt{Vs} inside vector \okt{V}, starting from given row. These two functions do nothing but print an error
  if the submatrix or vector does not fit in the main one.
 \end{itemize}
+
+\newpage
+
+\section{Solution}
+
+The control law is defined by:
+
+\begin{itemize}
+\item the unknown $\u = (v, \omega, \dot q_p, \dot q_t)$
+ \item the cost function $\min (v-v^*)^2 + (\omega-\omega^*)^2$
+ \begin{itemize}
+ \item can be written $\min ||\Q\u - \r||^2$
+\end{itemize}
+ \item the curvature constraint $v/\omega = v^*/\omega^*$
+ \begin{itemize}
+ \item can be written $\omega^* v - v^* \omega = 0$ and thus as $\A\u = \b$ with $\A$ dim $\dim{1}{4}$
+\end{itemize}
+ \item the actuation constraint $|\omega_l| \leq \omega_{\max}$, $|\omega_r| \leq \omega_{\max}$
+ \begin{itemize}
+ \item can be written $\Cc_1\u \leq \d_1$ from \eqref{eq:wheels}, with $\Cc_1$ dim $\dim{4}{4}$
+\end{itemize}
+ \item the visibility constraint $|x| < x_{\max}$ and $|y| < y_{\max}$
+  \begin{itemize}
+ \item has to be changed to an inequality on $(\dot x, \dot y)$ (e.g. $\dot x \leq \alpha (x_{\max} - x)$)
+ \item can then be written $\Cc_2\u \leq \d_2$  from the feature Jacobian, with $\Cc_2$ dim $\dim{4}{4}$
+\end{itemize}
+\end{itemize}
+
+The overall control can thus be written as a canonical QP:
+\begin{equation}
+ \begin{array}{ccc}
+ \u = &\arg \min & ||\Q\u - \r||^2 \\
+  &\text{s.t.} & \A\u = \b \\
+  &\text{s.t.} & \Cc\u \leq \d
+ \end{array}
+\end{equation}
+
 
 
 
